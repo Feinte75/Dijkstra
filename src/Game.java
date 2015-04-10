@@ -24,6 +24,7 @@ public class Game {
     // We need to strongly reference callback instances.
     private GLFWErrorCallback errorCallback;
     private GLFWKeyCallback   keyCallback;
+    private GLFWWindowSizeCallback windowSizeCallback;
 
     // The window handle
     private long window;
@@ -155,7 +156,7 @@ public class Game {
         glClearColor(0.5f, 0.0f, 0.0f, 0.0f);
         GL11.glViewport(0, 0, WIDTH, HEIGHT);
 
-        glfwSetWindowSizeCallback(window, new GLFWWindowSizeCallback() {
+        glfwSetWindowSizeCallback(window, windowSizeCallback =  new GLFWWindowSizeCallback() {
             @Override
             public void invoke(long l, int i, int i1) {
                 resize();
@@ -203,12 +204,11 @@ public class Game {
 
     void render(){
 
-
+        renderer.drawEntity(grid);
         for(Army army : armies){
             for(Troop troop : army.getTroops())renderer.drawEntity(troop);
             for(Village village : army.getVillages())renderer.drawEntity(village);
         }
-        renderer.drawEntity(grid);
 
     }
 
