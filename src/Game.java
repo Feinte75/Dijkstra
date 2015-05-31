@@ -1,3 +1,10 @@
+import entities.Army;
+import opengl.Grid;
+import entities.Troop;
+import entities.Village;
+import opengl.renderer.EntityRenderer;
+import opengl.renderer.OpenGlRenderer;
+import opengl.Primitive;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -11,6 +18,7 @@ import java.awt.*;
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -28,14 +36,16 @@ public class Game {
 
     // The window handle
     private long window;
-    private DoubleBuffer xPos, yPos;
-    int WIDTH = 800;
-    int HEIGHT = 600;
+    private DoubleBuffer xPosBuffer, yPosBuffer;
+    private int xPos, yPos;
+    private int WIDTH = 800;
+    private int HEIGHT = 600;
 
-    OpenGlRenderer renderer;
+    EntityRenderer renderer;
 
     private LinkedList<Army> armies;
     private Grid grid;
+    private ArrayList<Primitive> gridPrimitives;
 
     public void run() {
         System.loadLibrary("lwjgl");
@@ -66,13 +76,14 @@ public class Game {
 
         armies = new LinkedList<Army>();
         armies.add(new Army(Color.BLUE));
-        armies.get(0).buildVillage(305,305);
+        armies.get(0).buildVillage(305, 305);
         armies.add(new Army(Color.GREEN));
         armies.get(1).buildVillage(505,305);
-        grid = new Grid(armies.getFirst());
 
-        xPos = BufferUtils.createDoubleBuffer(1);
-        yPos = BufferUtils.createDoubleBuffer(1);
+        grid = new Grid(WIDTH, HEIGHT, 20);
+
+        xPosBuffer = BufferUtils.createDoubleBuffer(1);
+        yPosBuffer = BufferUtils.createDoubleBuffer(1);
     }
 
     void setupOpenGl(){
@@ -123,6 +134,13 @@ public class Game {
         glfwShowWindow(window);
     }
 
+    private void getCursorPosition(){
+        glfwGetCursorPos(window, xPosBuffer, yPosBuffer);
+        xPos = ((int) xPosBuffer.get(0));
+        yPos = HEIGHT - ((int) yPosBuffer.get(0));
+        System.out.println("xPos : "+xPos+"  yPos : " +yPos );
+    }
+
     private void resize(){
         IntBuffer width = BufferUtils.createIntBuffer(1);
         IntBuffer height = BufferUtils.createIntBuffer(1);
@@ -130,12 +148,8 @@ public class Game {
         glfwGetWindowSize(window, width, height);
         WIDTH = width.get(0);
         HEIGHT = height.get(0);
-        //clear any previous transforms the projection matrix may contain (otherwise it would be combined with the following glOrtho matrix)
-        //glLoadIdentity();
-        //set the projection (could use glTranslate/glScale but this utility function is simpler)
-       // GL11.glOrtho(0, WIDTH, HEIGHT, 0, -1, 1); //left,right,bottom,top,front,back
-        //TODO Replace gl ortho with matrix computation in a shader
         GL11.glViewport(0,0,WIDTH, HEIGHT);
+        renderer.setOrthoMatrix(WIDTH, HEIGHT);
         System.out.println("width : " + WIDTH + "   Height : " + HEIGHT);
     }
 
@@ -147,7 +161,7 @@ public class Game {
         // bindings available for use.
         GLContext.createFromCurrent();
 
-        renderer = new OpenGlRenderer();
+        renderer = new EntityRenderer();
 
         //we want to modify the projection matrix (without this, mesh normals will break)
         //glMatrixMode(GL_PROJECTION);
@@ -162,16 +176,29 @@ public class Game {
                 resize();
             }
         });
+        final double amountOfTicks = 60.0;
+        double ns = 1000000000 / amountOfTicks;
+        long currentTime = System.currentTimeMillis();
+        long lastTime = System.nanoTime();
+        int update = 0;
+        double delta = 0;
+        long now;
+
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
         while ( glfwWindowShouldClose(window) == GL_FALSE ) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
-
-            update();
+            now = System.nanoTime();
+            delta += (now - lastTime) / ns;
+            lastTime = now;
+            if(delta >= 1){
+                update();
+                delta--;
+            }
             render();
             if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == 1) {
-
+                getCursorPosition();
             }
 
             glfwSwapBuffers(window); // swap the color buffers
@@ -185,7 +212,7 @@ public class Game {
 
     int computeRandom(int range){
         Random random = new Random();
-        return (random.nextInt(range)-(range/2));
+        return (random.nextInt(range+1)-(range/2));
     }
 
     void update(){
@@ -195,7 +222,7 @@ public class Game {
                 village.update();
             }
             for(Troop troop : army.getTroops()){
-                troop.move(computeRandom(11),computeRandom(11));
+                troop.move(computeRandom(6),computeRandom(6));
             }
 
         }
@@ -204,7 +231,7 @@ public class Game {
 
     void render(){
 
-        renderer.drawEntity(grid);
+        //renderer.drawEntity(grid);
         for(Army army : armies){
             for(Troop troop : army.getTroops())renderer.drawEntity(troop);
             for(Village village : army.getVillages())renderer.drawEntity(village);
