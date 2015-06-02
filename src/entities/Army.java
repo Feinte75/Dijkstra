@@ -1,12 +1,11 @@
 package entities;
 
-import opengl.Primitive;
-import opengl.Square;
-import opengl.Triangle;
+import graphic.opengl.Primitive;
+import graphic.opengl.Square;
+import graphic.opengl.Triangle;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 /**
  * Created by feinte on 14/01/2015.
@@ -48,7 +47,6 @@ public class Army {
     }
 
     public float[] getColor() {
-        //System.out.println("Color :"+ colorValues[0] + " " + colorValues[1] + " " + colorValues[2] + " " + colorValues[3] );
         return colorValues;
     }
 

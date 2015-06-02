@@ -1,6 +1,6 @@
 package entities;
 
-import opengl.Primitive;
+import graphic.opengl.Primitive;
 
 import java.util.ArrayList;
 

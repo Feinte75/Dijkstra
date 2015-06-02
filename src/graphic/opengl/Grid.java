@@ -1,5 +1,6 @@
-package opengl;
+package graphic.opengl;
 
+import graphic.opengl.Primitive;
 import org.lwjgl.opengl.GL11;
 
 
@@ -14,13 +15,12 @@ public class Grid extends Primitive {
     public Grid(int width, int height, int span){
         super();
         generateGrid(width, height, span);
-        //generateGridPrimitives(width, height, span);
     }
 
     /**
-     * Generate the opengl vertices and indices to display a grid with following parameter
+     * Generate the graphic.opengl vertices and indices to display a grid with following parameter
      * Bug : a span of 10 won't display correctly
-     * Hypothesis : too much indices sent to drawElements opengl function
+     * Hypothesis : too much indices sent to drawElements graphic.opengl function
      * @param width
      * @param height
      * @param span

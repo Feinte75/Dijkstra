@@ -1,5 +1,6 @@
-package opengl;
+package graphic.opengl;
 
+import graphic.opengl.Primitive;
 import org.lwjgl.opengl.GL11;
 
 /**

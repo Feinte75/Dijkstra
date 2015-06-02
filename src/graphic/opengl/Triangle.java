@@ -1,28 +1,26 @@
-package opengl;
+package graphic.opengl;
 
+import graphic.opengl.Primitive;
 import org.lwjgl.opengl.GL11;
 
 /**
  * Created by feinte on 14/04/2015.
- * Reify a square
+ * Reify a triangle
  */
-public class Square extends Primitive{
+public class Triangle extends Primitive {
 
     public final static int OPENGLDRAWINGMETHOD = GL11.GL_TRIANGLES;
 
     private final byte[] indices = {
             // Left bottom triangle
-            0, 1, 2,
-            // Right top triangle
-            2, 3, 0
+            0, 1, 2
     };
 
-    public Square(float width){
+    public Triangle(float width, float height){
         vertices = new float[]{
-                -(width/2), (width/2), 0f, 1f,
-                -(width/2), -(width/2), 0f, 1f,
-                (width/2), -(width/2), 0f, 1f,
-                (width/2), (width/2), 0f, 1f
+                0f , (height/2), 0f, 1f,
+                (width/2), -(height/2), 0f, 1f,
+                -(width/2), -(height/2), 0f, 1f
         };
     }
 

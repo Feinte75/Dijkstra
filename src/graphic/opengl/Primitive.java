@@ -1,4 +1,4 @@
-package opengl;
+package graphic.opengl;
 
 /**
  * Created by feinte on 14/04/2015.

@@ -1,8 +1,6 @@
 package entities;
 
-import opengl.Primitive;
-import opengl.Triangle;
-import org.lwjgl.opengl.GL11;
+import graphic.opengl.Primitive;
 
 import java.util.ArrayList;
 

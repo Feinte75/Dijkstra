@@ -1,9 +1,8 @@
 package entities;
 
-import opengl.Primitive;
+import graphic.opengl.Primitive;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 /**
  * Created by Glenn on 18/01/2015.

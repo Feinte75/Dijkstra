@@ -1,8 +1,7 @@
-package opengl.renderer;
+package graphic.opengl.renderer;
 
 import entities.Entity;
-import opengl.Primitive;
-import org.lwjgl.BufferUtils;
+import graphic.opengl.Primitive;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
@@ -11,18 +10,33 @@ import org.lwjgl.opengl.GL30;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
+import static utils.Utils.*;
+
 /**
  * Created by feinte on 31/05/2015.
  * Renderer for entities
  */
 public class EntityRenderer extends OpenGlRenderer {
 
+    private FloatBuffer verticesBuffer;
+    private FloatBuffer colorsBuffer;
+    private ByteBuffer indicesBuffer;
+
+    /**
+     * BE CAREFUL Hard coded Limits which could cause problems later
+     */
+    public EntityRenderer(){
+        verticesBuffer = getFloatBufFromArr(new float[25]);
+        colorsBuffer = getFloatBufFromArr(new float[4]);
+        indicesBuffer = getByteBufFromArr(new byte[10]);
+        setupShaders();
+        setupVao();
+    }
+
     @Override
     public void setupVao(){
 
-        orthoBuffer = BufferUtils.createFloatBuffer(ortho_matrix.length);
-        orthoBuffer.put(ortho_matrix);
-        orthoBuffer.flip();
+        orthoBuffer = getFloatBufFromArr(ortho_matrix);
 
         // Create a new Vertex Array Object in memory and select it (bind)
         // A VAO can have up to 16 attributes (VBO's) assigned to it by default
@@ -56,7 +70,6 @@ public class EntityRenderer extends OpenGlRenderer {
     @Override
     protected void setupShaders() {
         int errorCheckValue = GL11.glGetError();
-
 
         // Load the vertex shader
         vsId = this.loadShader("vertex.glsl", GL20.GL_VERTEX_SHADER);
@@ -138,17 +151,9 @@ public class EntityRenderer extends OpenGlRenderer {
             float colors[] = entity.getArmy().getColor();
 
             // Sending data to OpenGL requires the usage of (flipped) byte buffers
-            FloatBuffer verticesBuffer = BufferUtils.createFloatBuffer(vertices.length);
-            verticesBuffer.put(vertices);
-            verticesBuffer.flip();
-
-            FloatBuffer colorsBuffer = BufferUtils.createFloatBuffer(colors.length);
-            colorsBuffer.put(colors);
-            colorsBuffer.flip();
-
-            ByteBuffer indicesBuffer = BufferUtils.createByteBuffer(indices.length);
-            indicesBuffer.put(indices);
-            indicesBuffer.flip();
+            updateFloatBuffer(verticesBuffer, vertices);
+            updateFloatBuffer(colorsBuffer, colors);
+            updateByteBuffer(indicesBuffer, indices);
 
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_DYNAMIC_DRAW);
@@ -164,7 +169,7 @@ public class EntityRenderer extends OpenGlRenderer {
             GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId);
             GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_DYNAMIC_DRAW);
 
-            GL11.glDrawElements(primitive.getOpenGLDrawingMethod(), primitive.getIndices().length, GL11.GL_UNSIGNED_BYTE, 0 );
+            GL11.glDrawElements(primitive.getOpenGLDrawingMethod(), indices.length, GL11.GL_UNSIGNED_BYTE, 0 );
         }
 
         // Put everything back to default (deselect)

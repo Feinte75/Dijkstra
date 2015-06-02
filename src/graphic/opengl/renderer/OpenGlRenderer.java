@@ -1,19 +1,13 @@
-package opengl.renderer;
+package graphic.opengl.renderer;
 
-import entities.Entity;
-import opengl.Primitive;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
 
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+
+import static utils.Utils.updateFloatBuffer;
 
 /**
  * Created by Glenn on 18/01/2015.
@@ -26,24 +20,24 @@ public abstract class OpenGlRenderer {
     protected int vboId = 0;
     protected int vbocId = 0;
     protected int vboiId = 0;
+    protected static int vboIndice = 0;
 
     // Shaders
     protected int vsId = 0;
     protected int fsId = 0;
     protected int pId = 0;
 
-    int ortho_matrix_location;
-    float ortho_matrix[] = {
+    protected int ortho_matrix_location;
+    protected float ortho_matrix[] = {
             2/800f, 0, 0, -1,
             0, 2/600f, 0, -1,
             0, 0, 1, 0,
             0, 0, 0, 1
     };
-    FloatBuffer orthoBuffer;
+    protected static FloatBuffer orthoBuffer;
 
     public OpenGlRenderer() {
-        setupShaders();
-        setupVao();
+
     }
 
     protected abstract void setupVao();
@@ -79,8 +73,6 @@ public abstract class OpenGlRenderer {
     public void setOrthoMatrix(float width, float height){
         ortho_matrix[0] = 2/width;
         ortho_matrix[5] = 2/height;
-        orthoBuffer = BufferUtils.createFloatBuffer(ortho_matrix.length);
-        orthoBuffer.put(ortho_matrix);
-        orthoBuffer.flip();
+        updateFloatBuffer(orthoBuffer, ortho_matrix);
     }
 }

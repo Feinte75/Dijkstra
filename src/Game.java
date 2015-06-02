@@ -1,10 +1,9 @@
 import entities.Army;
-import opengl.Grid;
+import logic.Board;
 import entities.Troop;
 import entities.Village;
-import opengl.renderer.EntityRenderer;
-import opengl.renderer.OpenGlRenderer;
-import opengl.Primitive;
+import graphic.opengl.renderer.EntityRenderer;
+import graphic.opengl.Primitive;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -44,7 +43,7 @@ public class Game {
     EntityRenderer renderer;
 
     private LinkedList<Army> armies;
-    private Grid grid;
+    private Board board;
     private ArrayList<Primitive> gridPrimitives;
 
     public void run() {
@@ -79,8 +78,6 @@ public class Game {
         armies.get(0).buildVillage(305, 305);
         armies.add(new Army(Color.GREEN));
         armies.get(1).buildVillage(505,305);
-
-        grid = new Grid(WIDTH, HEIGHT, 20);
 
         xPosBuffer = BufferUtils.createDoubleBuffer(1);
         yPosBuffer = BufferUtils.createDoubleBuffer(1);
@@ -138,7 +135,14 @@ public class Game {
         glfwGetCursorPos(window, xPosBuffer, yPosBuffer);
         xPos = ((int) xPosBuffer.get(0));
         yPos = HEIGHT - ((int) yPosBuffer.get(0));
-        System.out.println("xPos : "+xPos+"  yPos : " +yPos );
+        System.out.println("xPos : " + xPos + "  yPos : " + yPos);
+
+        // Dirty Dirty : compute the center of a square grid
+        if(xPos%50>=25)xPos-=25;
+        else xPos+=25;
+        if(yPos%50>=25)yPos-=25;
+        else yPos+=25;
+        board.drawSquare((((xPos)/50)*50)+25, (((yPos)/50)*50)+25);
     }
 
     private void resize(){
@@ -150,6 +154,7 @@ public class Game {
         HEIGHT = height.get(0);
         GL11.glViewport(0,0,WIDTH, HEIGHT);
         renderer.setOrthoMatrix(WIDTH, HEIGHT);
+        board.redrawGrid(WIDTH,HEIGHT);
         System.out.println("width : " + WIDTH + "   Height : " + HEIGHT);
     }
 
@@ -162,10 +167,11 @@ public class Game {
         GLContext.createFromCurrent();
 
         renderer = new EntityRenderer();
+        board = new Board(WIDTH, HEIGHT);
 
         //we want to modify the projection matrix (without this, mesh normals will break)
         //glMatrixMode(GL_PROJECTION);
-        //TODO Adapt glMatrixMode to opengl 3.2
+        //TODO Adapt glMatrixMode to graphic.opengl 3.2
         // Set the clear color
         glClearColor(0.5f, 0.0f, 0.0f, 0.0f);
         GL11.glViewport(0, 0, WIDTH, HEIGHT);
@@ -231,7 +237,7 @@ public class Game {
 
     void render(){
 
-        //renderer.drawEntity(grid);
+        board.update();
         for(Army army : armies){
             for(Troop troop : army.getTroops())renderer.drawEntity(troop);
             for(Village village : army.getVillages())renderer.drawEntity(village);
