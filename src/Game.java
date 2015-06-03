@@ -1,9 +1,10 @@
-import entities.Army;
-import logic.Board;
+import entities.Tile;
 import entities.Troop;
 import entities.Village;
-import graphic.opengl.renderer.EntityRenderer;
 import graphic.opengl.Primitive;
+import graphic.opengl.renderer.EntityRenderer;
+import logic.Army;
+import logic.Board;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -136,13 +137,6 @@ public class Game {
         xPos = ((int) xPosBuffer.get(0));
         yPos = HEIGHT - ((int) yPosBuffer.get(0));
         System.out.println("xPos : " + xPos + "  yPos : " + yPos);
-
-        // Dirty Dirty : compute the center of a square grid
-        if(xPos%50>=25)xPos-=25;
-        else xPos+=25;
-        if(yPos%50>=25)yPos-=25;
-        else yPos+=25;
-        board.drawSquare((((xPos)/50)*50)+25, (((yPos)/50)*50)+25);
     }
 
     private void resize(){
@@ -205,6 +199,13 @@ public class Game {
             render();
             if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == 1) {
                 getCursorPosition();
+
+                board.addSquare(xPos, yPos, Color.CYAN);
+            }
+            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2) == 1) {
+                getCursorPosition();
+
+                board.deleteSquare(xPos, yPos);
             }
 
             glfwSwapBuffers(window); // swap the color buffers
@@ -238,9 +239,16 @@ public class Game {
     void render(){
 
         board.update();
+        Tile[][] tileMap = board.getTileMap();
+        for(Tile[] absTile: tileMap){
+            for(Tile ordTile : absTile){
+                if(ordTile != null)
+                    renderer.drawDynamicRenderable(ordTile, ordTile.getX(), ordTile.getY());
+            }
+        }
         for(Army army : armies){
-            for(Troop troop : army.getTroops())renderer.drawEntity(troop);
-            for(Village village : army.getVillages())renderer.drawEntity(village);
+            for(Troop troop : army.getTroops())renderer.drawDynamicRenderable(troop, troop.getX(), troop.getY());
+            for(Village village : army.getVillages())renderer.drawDynamicRenderable(village, village.getX(), village.getY());
         }
 
     }

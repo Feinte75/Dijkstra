@@ -69,7 +69,7 @@ public class EntityRenderer extends OpenGlRenderer {
 
     @Override
     protected void setupShaders() {
-        int errorCheckValue = GL11.glGetError();
+        int errorCheckValue;
 
         // Load the vertex shader
         vsId = this.loadShader("vertex.glsl", GL20.GL_VERTEX_SHADER);
@@ -134,7 +134,7 @@ public class EntityRenderer extends OpenGlRenderer {
 
     }
 
-    public void drawEntity(Entity entity){
+    public void drawDynamicRenderable(Entity entity, float xPos, float yPos){
 
         GL20.glUseProgram(pId);
         // Bind to the VAO that has all the information about the quad vertices
@@ -148,7 +148,7 @@ public class EntityRenderer extends OpenGlRenderer {
         {
             float vertices[] = primitive.getEntityVertices(entity.getX(), entity.getY());
             byte indices[] = primitive.getIndices();
-            float colors[] = entity.getArmy().getColor();
+            float colors[] = entity.getColor();
 
             // Sending data to OpenGL requires the usage of (flipped) byte buffers
             updateFloatBuffer(verticesBuffer, vertices);

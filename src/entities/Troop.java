@@ -1,6 +1,7 @@
 package entities;
 
 import graphic.opengl.Primitive;
+import logic.Army;
 
 import java.util.ArrayList;
 
@@ -10,12 +11,14 @@ import java.util.ArrayList;
  */
 public class Troop extends Entity {
 
-    Troop(Army army, float x, float y, ArrayList<Primitive> primitives){
-        super();
+    private Army army;
+
+    public Troop(Army army, float x, float y, ArrayList<Primitive> primitives){
+        super(army.getColor(), primitives);
         this.army = army;
         this.x = x;
         this.y = y;
-        initPrimitives(primitives);
+        //initPrimitives(primitives);
     }
 
     public void move(float dx, float dy){
@@ -27,4 +30,13 @@ public class Troop extends Entity {
     public void initPrimitives(ArrayList<Primitive> primitives) {
         this.primitives = primitives;
     }
+
+    public Army getArmy() {
+        return army;
+    }
+
+    public void setArmy(Army army) {
+        this.army = army;
+    }
+
 }

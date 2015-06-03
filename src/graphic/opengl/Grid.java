@@ -1,6 +1,5 @@
 package graphic.opengl;
 
-import graphic.opengl.Primitive;
 import org.lwjgl.opengl.GL11;
 
 
@@ -18,12 +17,12 @@ public class Grid extends Primitive {
     }
 
     /**
-     * Generate the graphic.opengl vertices and indices to display a grid with following parameter
+     * Generate the opengl vertices and indices to display a grid with following parameter
      * Bug : a span of 10 won't display correctly
-     * Hypothesis : too much indices sent to drawElements graphic.opengl function
-     * @param width
-     * @param height
-     * @param span
+     * Hypothesis : too much indices sent to drawElements opengl function
+     * @param width the width of the grid
+     * @param height the height of the grid
+     * @param span the span of the grid : determine dimensions of squares
      */
     public void generateGrid(int width, int height, int span){
 
@@ -65,9 +64,6 @@ public class Grid extends Primitive {
         }
         System.out.println("Number of lines : " + size / 8 + " number of indices : " + indices[2] + "  size of array : " + vertices.length);
 
-    }
-
-    public void generateGridPrimitives(int width, int height, int span){
     }
 
     @Override

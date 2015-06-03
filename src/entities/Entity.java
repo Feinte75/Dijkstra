@@ -1,32 +1,32 @@
 package entities;
 
 import graphic.opengl.Primitive;
+import graphic.opengl.renderer.Renderable;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 /**
  * Created by Glenn on 18/01/2015.
  * Abstract representation of entities
  */
-public abstract class Entity {
+public abstract class Entity implements Renderable {
 
-    protected Army army;
     protected ArrayList<Primitive> primitives;
     protected float x = 0;
     protected float y = 0;
+    protected Color color;
 
-    public Entity(){
+    public Entity(Color color, ArrayList<Primitive> primitives){
+        this.color = color;
+        this.primitives = primitives;
     }
 
-    public Army getArmy() {
-        return army;
+    public float[] getColor(){
+        return color.getColorComponents(null);
     }
 
     public abstract void initPrimitives(ArrayList<Primitive> primitives);
-
-    public void setArmy(Army army) {
-        this.army = army;
-    }
 
     public float getX() {
         return x;

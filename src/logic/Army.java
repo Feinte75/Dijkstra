@@ -1,5 +1,7 @@
-package entities;
+package logic;
 
+import entities.Troop;
+import entities.Village;
 import graphic.opengl.Primitive;
 import graphic.opengl.Square;
 import graphic.opengl.Triangle;
@@ -19,6 +21,7 @@ public class Army {
     private ArrayList<Village> villages;
     private ArrayList<Primitive> villagePrimitives;
 
+    private Color color;
     private final float colorValues[];
 
     // TODO store only one primitive and use troops position to draw
@@ -32,6 +35,7 @@ public class Army {
         villagePrimitives = new ArrayList<Primitive>(2);
         villagePrimitives.add(new Triangle(10, 10));
 
+        this.color = color;
         colorValues = color.getRGBComponents(null);
         System.out.println(colorValues[0] + " " + colorValues[1] + " " + colorValues[2] + " " + colorValues[3]);
     }
@@ -46,10 +50,13 @@ public class Army {
         troops.add(new Troop(this, x, y, troopsPrimitives));
     }
 
-    public float[] getColor() {
+    public float[] getColorArray() {
         return colorValues;
     }
 
+    public Color getColor(){
+        return color;
+    }
 
     public ArrayList<Troop> getTroops() {
         return troops;
