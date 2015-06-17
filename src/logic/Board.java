@@ -25,7 +25,7 @@ public class Board {
     private PrimitiveRenderer primitiveRenderer;
     private static int span = 24;
     private Entity[][] tileMap;
-    int width, height;
+    private int width, height;
 
     public Board(int width, int height){
         this.width = width;

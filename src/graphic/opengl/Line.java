@@ -1,6 +1,5 @@
 package graphic.opengl;
 
-import graphic.opengl.Primitive;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -9,7 +8,7 @@ import org.lwjgl.opengl.GL11;
  */
 public class Line extends Primitive {
 
-    public final static int OPENGLDRAWINGMETHOD = GL11.GL_LINES;
+    private final static int OPENGLDRAWINGMETHOD = GL11.GL_LINES;
 
     private final byte[] indices = {
         0, 1

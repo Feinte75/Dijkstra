@@ -8,7 +8,7 @@ import org.lwjgl.opengl.GL11;
  */
 public class Grid extends Primitive {
 
-    public final static int OPENGLDRAWINGMETHOD = GL11.GL_LINES;
+    private final static int OPENGLDRAWINGMETHOD = GL11.GL_LINES;
 
     public Grid(int width, int height, int span){
         super();

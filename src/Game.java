@@ -223,12 +223,12 @@ public class Game {
             delta += (now - lastTime) / ns;
             lastTime = now;
             if(delta >= 1){
+                inputHandler.getPlayerMouseEvent(player);
+                inputHandler.getPlayerKeyboardEvent(player);
                 update();
                 delta--;
             }
             render();
-
-            inputHandler.getPlayerMouseEvent(player);
 
             if(glfwGetKey(window, GLFW_KEY_ESCAPE) == 1 ){
                 break;

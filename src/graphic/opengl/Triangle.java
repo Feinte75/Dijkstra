@@ -1,6 +1,5 @@
 package graphic.opengl;
 
-import graphic.opengl.Primitive;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -9,7 +8,7 @@ import org.lwjgl.opengl.GL11;
  */
 public class Triangle extends Primitive {
 
-    public final static int OPENGLDRAWINGMETHOD = GL11.GL_TRIANGLES;
+    private final static int OPENGLDRAWINGMETHOD = GL11.GL_TRIANGLES;
 
     private final byte[] indices = {
             // Left bottom triangle
