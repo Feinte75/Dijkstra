@@ -1,10 +1,11 @@
-import entities.Tile;
+import entities.Entity;
 import entities.Troop;
 import entities.Village;
-import graphic.opengl.Primitive;
 import graphic.opengl.renderer.EntityRenderer;
 import logic.Army;
 import logic.Board;
+import logic.InputHandler;
+import logic.Player;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.Sys;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -18,7 +19,6 @@ import java.awt.*;
 import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -41,11 +41,13 @@ public class Game {
     private int WIDTH = 800;
     private int HEIGHT = 600;
 
-    EntityRenderer renderer;
+    private EntityRenderer renderer;
+    private InputHandler inputHandler;
 
     private LinkedList<Army> armies;
     private Board board;
-    private ArrayList<Primitive> gridPrimitives;
+
+    private Player player;
 
     public void run() {
         System.loadLibrary("lwjgl");
@@ -74,11 +76,13 @@ public class Game {
 
     void setupGameContext(){
 
+        player = new Player();
+
         armies = new LinkedList<Army>();
         armies.add(new Army(Color.BLUE));
         armies.get(0).buildVillage(305, 305);
         armies.add(new Army(Color.GREEN));
-        armies.get(1).buildVillage(505,305);
+        armies.get(1).buildVillage(505, 305);
 
         xPosBuffer = BufferUtils.createDoubleBuffer(1);
         yPosBuffer = BufferUtils.createDoubleBuffer(1);
@@ -132,13 +136,6 @@ public class Game {
         glfwShowWindow(window);
     }
 
-    private void getCursorPosition(){
-        glfwGetCursorPos(window, xPosBuffer, yPosBuffer);
-        xPos = ((int) xPosBuffer.get(0));
-        yPos = HEIGHT - ((int) yPosBuffer.get(0));
-        System.out.println("xPos : " + xPos + "  yPos : " + yPos);
-    }
-
     private void resize(){
         IntBuffer width = BufferUtils.createIntBuffer(1);
         IntBuffer height = BufferUtils.createIntBuffer(1);
@@ -146,10 +143,41 @@ public class Game {
         glfwGetWindowSize(window, width, height);
         WIDTH = width.get(0);
         HEIGHT = height.get(0);
-        GL11.glViewport(0,0,WIDTH, HEIGHT);
+        GL11.glViewport(0, 0, WIDTH, HEIGHT);
         renderer.setOrthoMatrix(WIDTH, HEIGHT);
-        board.redrawGrid(WIDTH,HEIGHT);
+        inputHandler.resize(WIDTH, HEIGHT);
+        board.resize(WIDTH,HEIGHT);
         System.out.println("width : " + WIDTH + "   Height : " + HEIGHT);
+    }
+
+    void update(){
+
+        for(Army army : armies){
+            for(Village village : army.getVillages()){
+                village.update();
+            }
+            for(Troop troop : army.getTroops()){
+                troop.move(computeRandom(6),computeRandom(6));
+            }
+        }
+
+    }
+
+    void render(){
+
+        board.drawGrid();
+        Entity[][] tileMap = board.getTileMap();
+        for(Entity[] absTile: tileMap){
+            for(Entity ordTile : absTile){
+                if(ordTile != null)
+                    renderer.drawDynamicRenderable(ordTile, ordTile.getX(), ordTile.getY());
+            }
+        }
+        for(Army army : armies){
+            for(Troop troop : army.getTroops())renderer.drawDynamicRenderable(troop, troop.getX(), troop.getY());
+            for(Village village : army.getVillages())renderer.drawDynamicRenderable(village, village.getX(), village.getY());
+        }
+
     }
 
     private void loop() {
@@ -162,6 +190,8 @@ public class Game {
 
         renderer = new EntityRenderer();
         board = new Board(WIDTH, HEIGHT);
+        inputHandler = new InputHandler(board, window, HEIGHT);
+        inputHandler.loadPlayerCommandMap(player);
 
         //we want to modify the projection matrix (without this, mesh normals will break)
         //glMatrixMode(GL_PROJECTION);
@@ -197,24 +227,19 @@ public class Game {
                 delta--;
             }
             render();
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == 1) {
-                getCursorPosition();
 
-                board.addSquare(xPos, yPos, Color.CYAN);
+            inputHandler.getPlayerMouseEvent(player);
+
+            if(glfwGetKey(window, GLFW_KEY_ESCAPE) == 1 ){
+                break;
             }
-            if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2) == 1) {
-                getCursorPosition();
-
-                board.deleteSquare(xPos, yPos);
-            }
-
             glfwSwapBuffers(window); // swap the color buffers
 
             // Poll for window events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
         }
-        renderer.destroyOpenGL();
+        exit_cleanup();
     }
 
     int computeRandom(int range){
@@ -222,35 +247,8 @@ public class Game {
         return (random.nextInt(range+1)-(range/2));
     }
 
-    void update(){
-
-        for(Army army : armies){
-            for(Village village : army.getVillages()){
-                village.update();
-            }
-            for(Troop troop : army.getTroops()){
-                troop.move(computeRandom(6),computeRandom(6));
-            }
-
-        }
-
-    }
-
-    void render(){
-
-        board.update();
-        Tile[][] tileMap = board.getTileMap();
-        for(Tile[] absTile: tileMap){
-            for(Tile ordTile : absTile){
-                if(ordTile != null)
-                    renderer.drawDynamicRenderable(ordTile, ordTile.getX(), ordTile.getY());
-            }
-        }
-        for(Army army : armies){
-            for(Troop troop : army.getTroops())renderer.drawDynamicRenderable(troop, troop.getX(), troop.getY());
-            for(Village village : army.getVillages())renderer.drawDynamicRenderable(village, village.getX(), village.getY());
-        }
-
+    private void exit_cleanup(){
+        renderer.destroyOpenGL();
     }
 
     public static void main(String[] args) {

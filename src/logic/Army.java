@@ -24,16 +24,14 @@ public class Army {
     private Color color;
     private final float colorValues[];
 
-    // TODO store only one primitive and use troops position to draw
-
     public Army(Color color) {
         troops = new ArrayList<Troop>(50);
         troopsPrimitives = new ArrayList<Primitive>(2);
-        troopsPrimitives.add(new Square(5));
+        troopsPrimitives.add(new Square(20));
 
         villages = new ArrayList<Village>(10);
         villagePrimitives = new ArrayList<Primitive>(2);
-        villagePrimitives.add(new Triangle(10, 10));
+        villagePrimitives.add(new Triangle(20, 20));
 
         this.color = color;
         colorValues = color.getRGBComponents(null);

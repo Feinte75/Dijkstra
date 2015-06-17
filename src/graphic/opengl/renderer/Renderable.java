@@ -11,6 +11,5 @@ import java.util.ArrayList;
 public interface Renderable {
 
     ArrayList<Primitive> getPrimitives();
-    float[] getColor();
-
+    float[] getColorVector();
 }

@@ -2,7 +2,6 @@ package graphic.opengl;
 
 import org.lwjgl.opengl.GL11;
 
-
 /**
  * Created by feinte on 02/04/2015.
  * Game grid

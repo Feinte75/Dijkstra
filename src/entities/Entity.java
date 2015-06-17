@@ -22,8 +22,12 @@ public abstract class Entity implements Renderable {
         this.primitives = primitives;
     }
 
-    public float[] getColor(){
+    public float[] getColorVector(){
         return color.getColorComponents(null);
+    }
+
+    public Color getColor(){
+        return color;
     }
 
     public abstract void initPrimitives(ArrayList<Primitive> primitives);

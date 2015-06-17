@@ -148,7 +148,7 @@ public class EntityRenderer extends OpenGlRenderer {
         {
             float vertices[] = primitive.getEntityVertices(entity.getX(), entity.getY());
             byte indices[] = primitive.getIndices();
-            float colors[] = entity.getColor();
+            float colors[] = entity.getColorVector();
 
             // Sending data to OpenGL requires the usage of (flipped) byte buffers
             updateFloatBuffer(verticesBuffer, vertices);

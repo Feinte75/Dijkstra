@@ -15,4 +15,5 @@ public class Player {
     public void chooseArmy(Army army){
         this.army = army;
     }
+
 }

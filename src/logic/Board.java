@@ -1,5 +1,6 @@
 package logic;
 
+import entities.Entity;
 import entities.Tile;
 import graphic.opengl.Grid;
 import graphic.opengl.Primitive;
@@ -23,24 +24,29 @@ public class Board {
     private GridRenderer gridRenderer;
     private PrimitiveRenderer primitiveRenderer;
     private static int span = 24;
-    private Tile[][] tileMap;
+    private Entity[][] tileMap;
+    int width, height;
 
     public Board(int width, int height){
+        this.width = width;
+        this.height = height;
         grid = new Grid(width, height, span);
         gridRenderer = new GridRenderer(grid.getEntityVertices(0,0), grid.getIndices());
         primitiveRenderer = new PrimitiveRenderer();
         tileMap = new Tile[width/span][height/span];
     }
 
-    public void update(){
+    public void drawGrid(){
         gridRenderer.drawGrid();
     }
 
     public void redrawGrid(int width, int height){
+        this.width = width;
+        this.height = height;
         grid.generateGrid(width, height, span);
         gridRenderer.updateVerticesIndices(grid.getEntityVertices(0, 0), grid.getIndices());
         gridRenderer.updateBuffers();
-        Tile[][] temp = new Tile[width/span][height/span];
+        Entity[][] temp = new Tile[width/span][height/span];
         for(int i = 0; i < tileMap.length && i < temp.length; i++){
 
             temp[i] = Arrays.copyOf(tileMap[i], height/span);
@@ -52,7 +58,8 @@ public class Board {
     }
 
     public void addSquare(int xPos, int yPos, Color color){
-        // Dirty Dirty : compute the center of a square grid
+        // check bounds
+        if(xPos > width || xPos < 0 || yPos > height || yPos < 0)return;
         int x, y;
         int halfSpan = span/2;
         if(xPos%span>=halfSpan)xPos-=halfSpan;
@@ -69,11 +76,35 @@ public class Board {
             primitives.add(new Square((float)halfSpan));
             tileMap[x][y] = new Tile(color, xPos, yPos, primitives);
         }
+    }
 
+    public void addTile(Entity tile){
+
+        int xPos = (int)tile.getX();
+        int yPos = (int)tile.getY();
+        if(xPos > width || xPos < 0 || yPos > height || yPos < 0)return;
+        int x, y;
+        int halfSpan = span/2;
+        if(xPos%span>=halfSpan)xPos-=halfSpan;
+        else xPos+=halfSpan;
+        if(yPos%span>=halfSpan)yPos-=halfSpan;
+        else yPos+=halfSpan;
+        // Round to the inferior
+        x = xPos / span;
+        y = yPos / span;
+        xPos = (x*span) + halfSpan;
+        yPos = (y*span) + halfSpan;
+        if(tileMap[x][y] == null){
+            tile.setX(xPos);
+            tile.setY(yPos);
+            tileMap[x][y] = tile;
+        }
     }
 
     public void deleteSquare(int xPos, int yPos){
 
+        // check bounds
+        if(xPos > width || xPos < 0 || yPos > height || yPos < 0)return;
         int halfSpan = span/2;
         if(xPos%span>=halfSpan)xPos-=halfSpan;
         else xPos+=halfSpan;
@@ -84,15 +115,24 @@ public class Board {
 
     }
 
-    public void drawTiles(){
-        float x, y;
-        float halfSpan = span/2;
+    public void removeTile(int xPos, int yPos){
 
+        if(xPos > width || xPos < 0 || yPos > height || yPos < 0)return;
+        int halfSpan = span/2;
+        if(xPos%span>=halfSpan)xPos-=halfSpan;
+        else xPos+=halfSpan;
+        if(yPos%span>=halfSpan)yPos-=halfSpan;
+        else yPos+=halfSpan;
 
-
+        tileMap[xPos/span][yPos/span] = null;
     }
 
-    public Tile[][] getTileMap(){
+    public void resize(int width, int height){
+        this.width = width;
+        this.height = height;
+        redrawGrid(width, height);
+    }
+    public Entity[][] getTileMap(){
         return tileMap;
     }
 
