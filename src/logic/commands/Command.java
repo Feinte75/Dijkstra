@@ -6,4 +6,5 @@ package logic.commands;
  */
 public interface Command {
     void execute();
+    boolean isOnlyOnKeyJustPressed();
 }

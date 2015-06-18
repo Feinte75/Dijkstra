@@ -5,6 +5,7 @@ import entities.Tile;
 import graphic.opengl.Primitive;
 import graphic.opengl.Square;
 import logic.commands.*;
+import logic.listeners.CursorListener;
 import org.lwjgl.BufferUtils;
 
 import java.awt.*;
@@ -22,12 +23,23 @@ import static org.lwjgl.glfw.GLFW.*;
 public class InputHandler {
 
     private Board board;
-    private Map<Player, Map<Integer, MouseCommand>> playerToMouseCommandMap;
-    private Map<Player, Map<Integer, KeyboardCommand>> playerKeyboardCommandMap;
+    private Map<Player, Map<Integer, Command>> playersCommandMaps;
+    private ArrayList<CursorListener> cursorListeners;
     private long window;
     private int xCursPos, yCursPos;
     private DoubleBuffer xPosBuffer, yPosBuffer;
     private int width, height;
+
+    private Map<Integer, KeyStatus> keyStatusMap;
+    // Need to have 2 arrays because of 2 separate methods to poll
+    private static int[] keyCodes = {
+            GLFW_KEY_SPACE,
+    };
+    private static int[] mouseCodes = {
+            GLFW_MOUSE_BUTTON_1,
+            GLFW_MOUSE_BUTTON_2
+    };
+    private int[] combinedCodes;
 
     public InputHandler(Board board, long window, int height){
         this.board = board;
@@ -35,8 +47,12 @@ public class InputHandler {
         xPosBuffer = BufferUtils.createDoubleBuffer(1);
         yPosBuffer = BufferUtils.createDoubleBuffer(1);
         this.height = height;
-        playerToMouseCommandMap = new HashMap<Player, Map<Integer, MouseCommand>>(3);
-        playerKeyboardCommandMap = new HashMap<Player, Map<Integer, KeyboardCommand>>(2);
+        playersCommandMaps = new HashMap<Player, Map<Integer, Command>>(3);
+        cursorListeners = new ArrayList<CursorListener>(2);
+        keyStatusMap = new HashMap<Integer, KeyStatus>(5);
+        for(int keyCode : keyCodes){
+            keyStatusMap.put(keyCode, KeyStatus.KEY_RELEASED);
+        }
     }
 
     public void loadPlayerCommandMap(Player player){
@@ -44,49 +60,94 @@ public class InputHandler {
         ArrayList<Primitive> primitives = new ArrayList<Primitive>(1);
         primitives.add(new Square(24));
         Entity wallTile = new Tile(Color.CYAN, 0, 0, primitives);
-        Map<Integer, MouseCommand> mouseCommandMap = new HashMap<Integer, MouseCommand>(3);
-        mouseCommandMap.put(GLFW_MOUSE_BUTTON_1, new AddTileCommand(wallTile, board));
-        mouseCommandMap.put(GLFW_MOUSE_BUTTON_2, new RemoveTileCommand(null, board));
+        Map<Integer, Command> commandMap = new HashMap<Integer, Command>(3);
+        
+        MouseCommand addTileCommand = new AddTileCommand(wallTile, board);
+        cursorListeners.add(addTileCommand);
+        commandMap.put(GLFW_MOUSE_BUTTON_1, addTileCommand);
+
+        MouseCommand removeTileCommand = new RemoveTileCommand(null, board);
+        cursorListeners.add(removeTileCommand);
+        commandMap.put(GLFW_MOUSE_BUTTON_2, removeTileCommand);
 
         // We can keep the same primitives, they will be cloned when command fire
         Entity goalTile = new Tile(Color.BLACK, 0, 0, primitives);
+        addTileCommand = new AddTileCommand(goalTile, board);
+        cursorListeners.add(addTileCommand);
         // Temporary storage of the command untill the Switch command is called
-        mouseCommandMap.put(GLFW_KEY_0, new AddTileCommand(goalTile, board));
-        playerToMouseCommandMap.put(player, mouseCommandMap);
+        commandMap.put(GLFW_KEY_0, addTileCommand);
 
-        Map<Integer, KeyboardCommand> keyboardCommandMap = new HashMap<Integer, KeyboardCommand>(3);
-        keyboardCommandMap.put(GLFW_KEY_SPACE, new SwitchCommand(player, playerToMouseCommandMap));
-        playerKeyboardCommandMap.put(player, keyboardCommandMap);
+        commandMap.put(GLFW_KEY_SPACE, new SwitchCommand(player, playersCommandMaps, GLFW_KEY_0, GLFW_MOUSE_BUTTON_1));
+
+        playersCommandMaps.put(player, commandMap);
     }
 
 
-    public void getCursorPosition(){
+    private void getCursorPosition(){
         glfwGetCursorPos(window, xPosBuffer, yPosBuffer);
         xCursPos = ((int) xPosBuffer.get(0));
         yCursPos = height - ((int) yPosBuffer.get(0));
-        System.out.println("xPos : " + xCursPos + "  yPos : " + yCursPos);
+        //System.out.println("xPos : " + xCursPos + "  yPos : " + yCursPos);
     }
 
-    public void getPlayerMouseEvent(Player player){
+    private void notifyListeners(){
+        for(CursorListener cursorListener : cursorListeners){
+            cursorListener.update(xCursPos, yCursPos);
+        }
+    }
+
+    private void updateKeyStatus(){
+
+        for(int keyCode : keyCodes){
+
+            if(glfwGetKey(window, keyCode) == GLFW_PRESS){
+                if(keyStatusMap.get(keyCode) == KeyStatus.KEY_RELEASED)
+                    keyStatusMap.put(keyCode, KeyStatus.KEY_JUST_PRESSED);
+                else
+                    keyStatusMap.put(keyCode, KeyStatus.KEY_PRESSED);
+            }
+            else
+                keyStatusMap.put(keyCode, KeyStatus.KEY_RELEASED);
+        }
+
+        for(int mouseCode : mouseCodes){
+
+            if(glfwGetMouseButton(window, mouseCode) == GLFW_PRESS){
+                if(keyStatusMap.get(mouseCode) == KeyStatus.KEY_RELEASED)
+                    keyStatusMap.put(mouseCode, KeyStatus.KEY_JUST_PRESSED);
+                else
+                    keyStatusMap.put(mouseCode, KeyStatus.KEY_PRESSED);
+            }
+            else
+                keyStatusMap.put(mouseCode, KeyStatus.KEY_RELEASED);
+        }
+    }
+
+    public void handlePlayerInput(Player player){
 
         getCursorPosition();
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_1) == 1) {
-            getPlayerMouseCommand(player, GLFW_MOUSE_BUTTON_1).execute(xCursPos, yCursPos);
+        notifyListeners();
+        updateKeyStatus();
+
+        // TODO find a way to iterate only once over the codes (use combined codes array)
+        for(int keyCode : keyCodes){
+            //System.out.println("Keycode : "+keyCode+ " Corresponding state : "+keyStatusMap.get(keyCode)+" keyJustPressed " + getCommand(player, keyCode).isOnlyOnKeyJustPressed());
+            if((keyStatusMap.get(keyCode) == KeyStatus.KEY_JUST_PRESSED) && getCommand(player, keyCode).isOnlyOnKeyJustPressed())
+                getCommand(player, keyCode).execute();
+            else if(((keyStatusMap.get(keyCode) == KeyStatus.KEY_PRESSED) && !getCommand(player, keyCode).isOnlyOnKeyJustPressed()))
+                getCommand(player, keyCode).execute();
         }
-        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_2) == 1) {
-            getPlayerMouseCommand(player, GLFW_MOUSE_BUTTON_2).execute(xCursPos, yCursPos);
+        for(int mouseCode : mouseCodes){
+            //System.out.println("mouseCode : "+mouseCode+ " Corresponding state : "+keyStatusMap.get(mouseCode)+" keyJustPressed " + getCommand(player, mouseCode).isOnlyOnKeyJustPressed());
+            if((keyStatusMap.get(mouseCode) == KeyStatus.KEY_JUST_PRESSED) && getCommand(player, mouseCode).isOnlyOnKeyJustPressed())
+                getCommand(player, mouseCode).execute();
+            else if(((keyStatusMap.get(mouseCode) == KeyStatus.KEY_PRESSED) && !getCommand(player, mouseCode).isOnlyOnKeyJustPressed()))
+                getCommand(player, mouseCode).execute();
         }
     }
-    // TODO harmonize mouse and keyboard event handling
-    public void getPlayerKeyboardEvent(Player player){
 
-        if(glfwGetKey(window, GLFW_KEY_SPACE) == 1) {
-            playerKeyboardCommandMap.get(player).get(GLFW_KEY_SPACE).execute();
-        }
-    }
-
-    public MouseCommand getPlayerMouseCommand(Player player, int glCode){
-        return playerToMouseCommandMap.get(player).get(glCode);
+    public Command getCommand(Player player, int glCode){
+        return playersCommandMaps.get(player).get(glCode);
     }
 
     public void resize(int width, int height){

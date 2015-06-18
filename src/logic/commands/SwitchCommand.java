@@ -1,28 +1,35 @@
 package logic.commands;
 
 import logic.Player;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Map;
 
 /**
  * Created by feinte on 17/06/2015.
+ * Switch 2 commands in a player map
  */
 public class SwitchCommand extends KeyboardCommand{
 
     private Player player;
-    private Map<Player, Map<Integer, MouseCommand>> playerToMouseCommandMap;
-
-    public SwitchCommand(Player player, Map<Player, Map<Integer, MouseCommand>> mouseCommandMap){
+    private Map<Player, Map<Integer, Command>> playerCommandMap;
+    private int firstKey, secondKey;
+    public SwitchCommand(Player player, Map<Player, Map<Integer, Command>> mouseCommandMap, int firstKey, int secondKey){
         this.player = player;
-        playerToMouseCommandMap = mouseCommandMap;
+        playerCommandMap = mouseCommandMap;
+        this.firstKey = firstKey;
+        this.secondKey = secondKey;
     }
 
     @Override
     public void execute() {
-        Map<Integer, MouseCommand> commandMap = playerToMouseCommandMap.get(player);
-        MouseCommand temp = commandMap.get(GLFW.GLFW_MOUSE_BUTTON_1);
-        commandMap.replace(GLFW.GLFW_MOUSE_BUTTON_1, temp, commandMap.get(GLFW.GLFW_KEY_0));
-        commandMap.replace(GLFW.GLFW_KEY_0, commandMap.get(GLFW.GLFW_MOUSE_BUTTON_1), temp);
+        Map<Integer, Command> commandMap = playerCommandMap.get(player);
+        Command temp = commandMap.get(firstKey);
+        commandMap.put(firstKey, commandMap.get(secondKey));
+        commandMap.put(secondKey, temp);
+    }
+
+    @Override
+    public boolean isOnlyOnKeyJustPressed() {
+        return true;
     }
 }

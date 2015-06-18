@@ -22,9 +22,13 @@ public class AddTileCommand extends MouseCommand {
     }
 
     @Override
-    public void execute(int xPos, int yPos) {
+    public void execute() {
         board.addTile(new Tile(entity.getColor(), xPos, yPos, (ArrayList<Primitive>)entity.getPrimitives().clone()));
-        System.out.println("Add tile");
+    }
+
+    @Override
+    public boolean isOnlyOnKeyJustPressed() {
+        return false;
     }
 
 }

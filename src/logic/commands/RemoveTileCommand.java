@@ -18,7 +18,12 @@ public class RemoveTileCommand extends MouseCommand {
     }
 
     @Override
-    public void execute(int xPos, int yPos) {
+    public void execute() {
         board.removeTile(xPos, yPos);
+    }
+
+    @Override
+    public boolean isOnlyOnKeyJustPressed() {
+        return false;
     }
 }

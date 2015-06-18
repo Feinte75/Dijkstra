@@ -17,7 +17,6 @@ import org.lwjgl.opengl.GLContext;
 
 import java.awt.*;
 import java.nio.ByteBuffer;
-import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.LinkedList;
 import java.util.Random;
@@ -36,8 +35,6 @@ public class Game {
 
     // The window handle
     private long window;
-    private DoubleBuffer xPosBuffer, yPosBuffer;
-    private int xPos, yPos;
     private int WIDTH = 800;
     private int HEIGHT = 600;
 
@@ -83,9 +80,6 @@ public class Game {
         armies.get(0).buildVillage(305, 305);
         armies.add(new Army(Color.GREEN));
         armies.get(1).buildVillage(505, 305);
-
-        xPosBuffer = BufferUtils.createDoubleBuffer(1);
-        yPosBuffer = BufferUtils.createDoubleBuffer(1);
     }
 
     void setupOpenGl(){
@@ -130,7 +124,7 @@ public class Game {
         // Make the OpenGL context current
         glfwMakeContextCurrent(window);
         // Enable v-sync
-        glfwSwapInterval(1);
+        glfwSwapInterval(0);
 
         // Make the window visible
         glfwShowWindow(window);
@@ -147,7 +141,12 @@ public class Game {
         renderer.setOrthoMatrix(WIDTH, HEIGHT);
         inputHandler.resize(WIDTH, HEIGHT);
         board.resize(WIDTH,HEIGHT);
-        System.out.println("width : " + WIDTH + "   Height : " + HEIGHT);
+        System.out.println(" New width : " + WIDTH + "   New Height : " + HEIGHT);
+    }
+
+    int computeRandom(int range){
+        Random random = new Random();
+        return (random.nextInt(range+1)-(range/2));
     }
 
     void update(){
@@ -190,6 +189,8 @@ public class Game {
 
         renderer = new EntityRenderer();
         board = new Board(WIDTH, HEIGHT);
+        // Set the input so that a key pressed stays pressed until polled by glfwGetKey
+        glfwSetInputMode(window, GLFW_STICKY_KEYS, 1);
         inputHandler = new InputHandler(board, window, HEIGHT);
         inputHandler.loadPlayerCommandMap(player);
 
@@ -208,9 +209,10 @@ public class Game {
         });
         final double amountOfTicks = 60.0;
         double ns = 1000000000 / amountOfTicks;
-        long currentTime = System.currentTimeMillis();
+        long currentTime = System.nanoTime();
         long lastTime = System.nanoTime();
         int update = 0;
+        int render = 0;
         double delta = 0;
         long now;
 
@@ -222,17 +224,23 @@ public class Game {
             now = System.nanoTime();
             delta += (now - lastTime) / ns;
             lastTime = now;
-            if(delta >= 1){
-                inputHandler.getPlayerMouseEvent(player);
-                inputHandler.getPlayerKeyboardEvent(player);
+
+            if((now - currentTime) > 1000000000) { //1 Second
+                System.out.println("Updates : "+update+"  Render : "+render);
+                update = 0;
+                render = 0;
+                currentTime = System.nanoTime();
+            }
+            inputHandler.handlePlayerInput(player);
+            if(delta >= 1) {
                 update();
+                update++;
                 delta--;
             }
-            render();
 
-            if(glfwGetKey(window, GLFW_KEY_ESCAPE) == 1 ){
-                break;
-            }
+            render();
+            render++;
+
             glfwSwapBuffers(window); // swap the color buffers
 
             // Poll for window events. The key callback above will only be
@@ -240,11 +248,6 @@ public class Game {
             glfwPollEvents();
         }
         exit_cleanup();
-    }
-
-    int computeRandom(int range){
-        Random random = new Random();
-        return (random.nextInt(range+1)-(range/2));
     }
 
     private void exit_cleanup(){
