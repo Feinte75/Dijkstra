@@ -33,17 +33,6 @@ public class GridRenderer extends OpenGlRenderer{
         setupVao();
     }
 
-    public void updateBuffers(){
-        verticesBuffer = getFloatBufFromArr(vertices);
-        indicesBuffer = getIntBufFromArr(indices);
-        GL30.glBindVertexArray(vaoId);
-        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
-        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW);
-        GL30.glBindVertexArray(0);
-        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId);
-        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW);
-    }
-
     @Override
     protected void setupVao() {
 
@@ -149,6 +138,17 @@ public class GridRenderer extends OpenGlRenderer{
         this.vertices = vertices;
         this.indices = indices;
 
+    }
+
+    public void updateBuffers() {
+        verticesBuffer = getFloatBufFromArr(vertices);
+        indicesBuffer = getIntBufFromArr(indices);
+        GL30.glBindVertexArray(vaoId);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW);
+        GL30.glBindVertexArray(0);
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId);
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_STATIC_DRAW);
     }
 
     public void drawGrid() {

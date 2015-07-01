@@ -1,6 +1,5 @@
 package logic.commands;
 
-import entities.Entity;
 import logic.Board;
 
 /**
@@ -9,11 +8,9 @@ import logic.Board;
  */
 public class RemoveTileCommand extends MouseCommand {
 
-    private Entity entity;
     private Board board;
 
-    public RemoveTileCommand(Entity entity, Board board){
-        this.entity = entity;
+    public RemoveTileCommand(Board board) {
         this.board = board;
     }
 

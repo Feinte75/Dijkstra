@@ -19,8 +19,8 @@ public class Village extends PlayerControlledEntity {
 
     public void update(){
         tick++;
-        if (tick > 100) {
-            if (troopSpawned < 10) {
+        if (tick > 10) {
+            if (troopSpawned < 1000) {
                 army.spawnTroop(x, y);
                 troopSpawned++;
             }

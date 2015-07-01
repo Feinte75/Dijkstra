@@ -52,7 +52,6 @@ public class Game {
 
     public void run() {
         System.loadLibrary("lwjgl");
-        System.loadLibrary("OpenAL");
         System.out.println("Hello LWJGL " + Sys.getVersion() + "!");
 
         try {
@@ -139,6 +138,10 @@ public class Game {
         glfwShowWindow(window);
     }
 
+    /**
+     * Resize callback called when the window get resized
+     * Take care of updating every components dependent on window size
+     */
     private void resize(){
         IntBuffer width = BufferUtils.createIntBuffer(1);
         IntBuffer height = BufferUtils.createIntBuffer(1);

@@ -29,6 +29,8 @@ public class Army {
 
     public Army(Color color) {
 
+        entityFactory = EntityFactory.getEntityFactory();
+
         villages = new ArrayList<Village>(10);
         villagePrimitives = new ArrayList<Primitive>(2);
         villagePrimitives.add(new Triangle(20, 20));
@@ -43,9 +45,6 @@ public class Army {
         villagePrimitives = new ArrayList<Primitive>(1);
         villagePrimitives.add(new Triangle(20, 20));
         entityFactory.updateTemplate(EntityType.VILLAGE, villagePrimitives);
-
-
-        entityFactory = EntityFactory.getEntityFactory();
     }
 
     public void buildVillage(float x, float y)

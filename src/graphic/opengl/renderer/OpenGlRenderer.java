@@ -15,18 +15,17 @@ import static utils.Utils.updateFloatBuffer;
  */
 public abstract class OpenGlRenderer {
 
+    protected static int vboIndice = 0;
+    protected static FloatBuffer orthoBuffer;
     //
     protected int vaoId = 0;
     protected int vboId = 0;
     protected int vbocId = 0;
     protected int vboiId = 0;
-    protected static int vboIndice = 0;
-
     // Shaders
     protected int vsId = 0;
     protected int fsId = 0;
     protected int pId = 0;
-
     protected int ortho_matrix_location;
     protected float ortho_matrix[] = {
             2/800f, 0, 0, -1,
@@ -34,7 +33,6 @@ public abstract class OpenGlRenderer {
             0, 0, 1, 0,
             0, 0, 0, 1
     };
-    protected static FloatBuffer orthoBuffer;
 
     public OpenGlRenderer() {
 
@@ -46,7 +44,7 @@ public abstract class OpenGlRenderer {
 
     protected int loadShader(String filename, int type) {
         StringBuilder shaderSource = new StringBuilder();
-        int shaderID = 0;
+        int shaderID;
 
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filename));

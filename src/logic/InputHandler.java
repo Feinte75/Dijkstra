@@ -22,14 +22,14 @@ import static org.lwjgl.glfw.GLFW.*;
 public class InputHandler {
 
     // Need to have 2 arrays because of 2 separate methods to poll
-    private static int[] keyCodes = {
+    private static final int[] keyCodes = {
             GLFW_KEY_SPACE,
     };
-    private static int[] mouseCodes = {
+    private static final int[] mouseCodes = {
             GLFW_MOUSE_BUTTON_1,
             GLFW_MOUSE_BUTTON_2
     };
-    private Board board;
+    private final Board board;
     private Map<Player, Map<Integer, Command>> playersCommandMaps;
     private ArrayList<CursorListener> cursorListeners;
     private long window;
@@ -38,7 +38,6 @@ public class InputHandler {
     private int width, height;
     private EntityFactory entityFactory;
     private Map<Integer, KeyStatus> keyStatusMap;
-    private int[] combinedCodes;
 
     public InputHandler(Board board, long window, int height){
         this.board = board;
@@ -65,7 +64,7 @@ public class InputHandler {
         cursorListeners.add(addTileCommand);
         commandMap.put(GLFW_MOUSE_BUTTON_1, addTileCommand);
 
-        MouseCommand removeTileCommand = new RemoveTileCommand(null, board);
+        MouseCommand removeTileCommand = new RemoveTileCommand(board);
         cursorListeners.add(removeTileCommand);
         commandMap.put(GLFW_MOUSE_BUTTON_2, removeTileCommand);
 
@@ -81,12 +80,13 @@ public class InputHandler {
         playersCommandMaps.put(player, commandMap);
     }
 
-
+    /**
+     * Recover user cursor position and store it
+     */
     private void getCursorPosition(){
         glfwGetCursorPos(window, xPosBuffer, yPosBuffer);
         xCursPos = ((int) xPosBuffer.get(0));
         yCursPos = height - ((int) yPosBuffer.get(0));
-        //System.out.println("xPos : " + xCursPos + "  yPos : " + yCursPos);
     }
 
     private void notifyListeners(){
@@ -95,6 +95,9 @@ public class InputHandler {
         }
     }
 
+    /**
+     * Check the input status and change them according to the current and past states
+     */
     private void updateKeyStatus(){
 
         for(int keyCode : keyCodes){
@@ -122,6 +125,11 @@ public class InputHandler {
         }
     }
 
+    /**
+     * Check for new input and execute associated Command
+     *
+     * @param player Player's inputs checked
+     */
     public void handlePlayerInput(Player player){
 
         getCursorPosition();
@@ -145,6 +153,12 @@ public class InputHandler {
         }
     }
 
+    /**
+     * Get the Command corresponding to the code associated to the player
+     * @param player Player to recover the command from
+     * @param glCode Input code (Key or Mouse)
+     * @return The appropriate command mapped to the input code
+     */
     public Command getCommand(Player player, int glCode){
         return playersCommandMaps.get(player).get(glCode);
     }

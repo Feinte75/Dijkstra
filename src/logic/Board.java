@@ -5,12 +5,9 @@ import entities.EntityFactory;
 import entities.EntityType;
 import entities.Tile;
 import graphic.opengl.Grid;
-import graphic.opengl.Primitive;
-import graphic.opengl.Square;
 import graphic.opengl.renderer.GridRenderer;
 
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -22,12 +19,12 @@ import java.util.Arrays;
 public class Board {
 
     private static int span = 24;
-    private Grid grid;
-    private GridRenderer gridRenderer;
+    private final Grid grid;
+    private final GridRenderer gridRenderer;
+    private final EntityFactory factory;
     private Entity[][] tileMap;
     private int nbTiles = 0;
     private int width, height;
-    private EntityFactory factory;
 
     public Board(int width, int height){
         this.width = width;
@@ -42,10 +39,17 @@ public class Board {
         gridRenderer.drawGrid();
     }
 
+    /**
+     * Resize the grid to the new width and height
+     * Also generate a new Tilemap with more Tiles
+     *
+     * @param width
+     * @param height
+     */
     public void redrawGrid(int width, int height){
         this.width = width;
         this.height = height;
-
+        // TODO generate a bigger Tilemap to avoid crashes when drawing at the edges of the window
         grid.generateGrid(width, height, span);
         gridRenderer.updateVerticesIndices(grid.getEntityVertices(0, 0), grid.getIndices());
         gridRenderer.updateBuffers();
@@ -56,32 +60,14 @@ public class Board {
             temp[i] = Arrays.copyOf(tileMap[i], height/span);
         }
         tileMap = temp;
-        /*ArrayList<Primitive> primitives = new ArrayList<Primitive>(1);
-        primitives.add(new Square((float) span/2));
-        factory.updateTemplate(EntityType.TILE, primitives);*/
     }
 
-    public void addSquare(int xPos, int yPos, Color color){
-        // check bounds
-        if(xPos > width || xPos < 0 || yPos > height || yPos < 0)return;
-        int x, y;
-        int halfSpan = span/2;
-        if(xPos%span>=halfSpan)xPos-=halfSpan;
-        else xPos+=halfSpan;
-        if(yPos%span>=halfSpan)yPos-=halfSpan;
-        else yPos+=halfSpan;
-        // Round to the inferior
-        x = xPos / span;
-        y = yPos / span;
-        xPos = (x*span) + halfSpan;
-        yPos = (y*span) + halfSpan;
-        if(tileMap[x][y] == null){
-            ArrayList<Primitive> primitives = new ArrayList<Primitive>(1);
-            primitives.add(new Square((float)halfSpan));
-            tileMap[x][y] = new Tile(color, xPos, yPos, primitives);
-        }
-    }
-
+    /**
+     * Add a new tile to the grid
+     * @param color Color of the new tile
+     * @param xCoor X position
+     * @param yCoor Y position
+     */
     public void addTile(Color color, float xCoor, float yCoor) {
         Entity tile = factory.createEntity(EntityType.TILE, color, xCoor, yCoor);
 
@@ -107,20 +93,6 @@ public class Board {
         }
     }
 
-    public void deleteSquare(int xPos, int yPos){
-
-        // check bounds
-        if(xPos > width || xPos < 0 || yPos > height || yPos < 0)return;
-        int halfSpan = span/2;
-        if(xPos%span>=halfSpan)xPos-=halfSpan;
-        else xPos+=halfSpan;
-        if(yPos%span>=halfSpan)yPos-=halfSpan;
-        else yPos+=halfSpan;
-
-        tileMap[xPos/span][yPos/span] = null;
-
-    }
-
     public void removeTile(int xPos, int yPos){
 
         if(xPos > width || xPos < 0 || yPos > height || yPos < 0)return;
@@ -130,8 +102,10 @@ public class Board {
         if(yPos%span>=halfSpan)yPos-=halfSpan;
         else yPos+=halfSpan;
 
-        tileMap[xPos/span][yPos/span] = null;
-        nbTiles--;
+        if (tileMap[xPos / span][yPos / span] != null) {
+            tileMap[xPos / span][yPos / span] = null;
+            nbTiles--;
+        }
     }
 
     public void resize(int width, int height){

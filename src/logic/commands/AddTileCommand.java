@@ -9,8 +9,8 @@ import logic.Board;
  */
 public class AddTileCommand extends MouseCommand {
 
-    private Entity entity;
-    private Board board;
+    private final Entity entity;
+    private final Board board;
 
     public AddTileCommand(Entity entity, Board board){
         this.entity = entity;
