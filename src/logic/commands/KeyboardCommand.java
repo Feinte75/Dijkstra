@@ -6,6 +6,7 @@ package logic.commands;
  */
 public abstract class KeyboardCommand implements Command {
 
+    @Override
     public abstract void execute();
 
     @Override

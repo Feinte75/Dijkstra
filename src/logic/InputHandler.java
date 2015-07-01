@@ -1,9 +1,8 @@
 package logic;
 
 import entities.Entity;
-import entities.Tile;
-import graphic.opengl.Primitive;
-import graphic.opengl.Square;
+import entities.EntityFactory;
+import entities.EntityType;
 import logic.commands.*;
 import logic.listeners.CursorListener;
 import org.lwjgl.BufferUtils;
@@ -22,15 +21,6 @@ import static org.lwjgl.glfw.GLFW.*;
  */
 public class InputHandler {
 
-    private Board board;
-    private Map<Player, Map<Integer, Command>> playersCommandMaps;
-    private ArrayList<CursorListener> cursorListeners;
-    private long window;
-    private int xCursPos, yCursPos;
-    private DoubleBuffer xPosBuffer, yPosBuffer;
-    private int width, height;
-
-    private Map<Integer, KeyStatus> keyStatusMap;
     // Need to have 2 arrays because of 2 separate methods to poll
     private static int[] keyCodes = {
             GLFW_KEY_SPACE,
@@ -39,6 +29,15 @@ public class InputHandler {
             GLFW_MOUSE_BUTTON_1,
             GLFW_MOUSE_BUTTON_2
     };
+    private Board board;
+    private Map<Player, Map<Integer, Command>> playersCommandMaps;
+    private ArrayList<CursorListener> cursorListeners;
+    private long window;
+    private int xCursPos, yCursPos;
+    private DoubleBuffer xPosBuffer, yPosBuffer;
+    private int width, height;
+    private EntityFactory entityFactory;
+    private Map<Integer, KeyStatus> keyStatusMap;
     private int[] combinedCodes;
 
     public InputHandler(Board board, long window, int height){
@@ -53,13 +52,13 @@ public class InputHandler {
         for(int keyCode : keyCodes){
             keyStatusMap.put(keyCode, KeyStatus.KEY_RELEASED);
         }
+        entityFactory = EntityFactory.getEntityFactory();
     }
 
     public void loadPlayerCommandMap(Player player){
         // TODO load config from file instead of hard coded
-        ArrayList<Primitive> primitives = new ArrayList<Primitive>(1);
-        primitives.add(new Square(24));
-        Entity wallTile = new Tile(Color.CYAN, 0, 0, primitives);
+
+        Entity wallTile = entityFactory.createEntity(EntityType.TILE, Color.CYAN, 0, 0);
         Map<Integer, Command> commandMap = new HashMap<Integer, Command>(3);
         
         MouseCommand addTileCommand = new AddTileCommand(wallTile, board);
@@ -71,7 +70,7 @@ public class InputHandler {
         commandMap.put(GLFW_MOUSE_BUTTON_2, removeTileCommand);
 
         // We can keep the same primitives, they will be cloned when command fire
-        Entity goalTile = new Tile(Color.BLACK, 0, 0, primitives);
+        Entity goalTile = entityFactory.createEntity(EntityType.TILE, Color.BLACK, 0, 0);
         addTileCommand = new AddTileCommand(goalTile, board);
         cursorListeners.add(addTileCommand);
         // Temporary storage of the command untill the Switch command is called

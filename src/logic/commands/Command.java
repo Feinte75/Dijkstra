@@ -5,6 +5,7 @@ package logic.commands;
  * Command pattern implementation (Refer to the abstract Command classes for the moment)
  */
 public interface Command {
+
     void execute();
     boolean isOnlyOnKeyJustPressed();
 }

@@ -14,11 +14,16 @@ public abstract class MouseCommand implements Command, CursorListener{
 
     }
 
-    public abstract void execute();
-
     @Override
     public void update(int xPos, int yPos) {
         this.xPos = xPos;
         this.yPos = yPos;
     }
+
+    @Override
+    public abstract void execute();
+
+    @Override
+    public abstract boolean isOnlyOnKeyJustPressed();
+
 }

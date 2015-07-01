@@ -11,5 +11,15 @@ import java.util.ArrayList;
 public interface Renderable {
 
     ArrayList<Primitive> getPrimitives();
-    float[] getColorVector();
+
+    float[] getVertices();
+
+    /**
+     * @return Amount of vertices (Points) necessary to draw the primitive
+     */
+    int getNbVertices();
+
+    int[] getIndices();
+
+    float[] getColorArray();
 }

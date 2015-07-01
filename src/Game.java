@@ -1,6 +1,4 @@
-import entities.Entity;
-import entities.Troop;
-import entities.Village;
+import entities.*;
 import graphic.opengl.renderer.EntityRenderer;
 import logic.Army;
 import logic.Board;
@@ -46,9 +44,15 @@ public class Game {
 
     private Player player;
 
+    private EntityFactory entityFactory;
+
+    public static void main(String[] args) {
+        new Game().run();
+    }
+
     public void run() {
         System.loadLibrary("lwjgl");
-        System.loadLibrary("OpenAL32");
+        System.loadLibrary("OpenAL");
         System.out.println("Hello LWJGL " + Sys.getVersion() + "!");
 
         try {
@@ -75,11 +79,16 @@ public class Game {
 
         player = new Player();
 
+        entityFactory = EntityFactory.getEntityFactory();
+
         armies = new LinkedList<Army>();
         armies.add(new Army(Color.BLUE));
         armies.get(0).buildVillage(305, 305);
         armies.add(new Army(Color.GREEN));
         armies.get(1).buildVillage(505, 305);
+
+        armies.get(0).spawnTroop(200, 200);
+        armies.get(1).spawnTroop(1, 1);
     }
 
     void setupOpenGl(){
@@ -123,7 +132,7 @@ public class Game {
 
         // Make the OpenGL context current
         glfwMakeContextCurrent(window);
-        // Enable v-sync
+        // Disable v-sync (set to 1 to enable)
         glfwSwapInterval(0);
 
         // Make the window visible
@@ -152,11 +161,11 @@ public class Game {
     void update(){
 
         for(Army army : armies){
-            for(Village village : army.getVillages()){
+            for (Village village : army.getVillages()) {
                 village.update();
             }
             for(Troop troop : army.getTroops()){
-                troop.move(computeRandom(6),computeRandom(6));
+                troop.move(computeRandom(6), computeRandom(6));
             }
         }
 
@@ -165,18 +174,40 @@ public class Game {
     void render(){
 
         board.drawGrid();
+
+        /**
+         * Batch rendering
+         * First init the batch with different sizes
+         * Load renderables
+         * Draw
+         */
+
+        for (Army army : armies) {
+
+            renderer.initPacking(army.getTroops().size(), entityFactory.createPlayerControlledEntity(EntityType.TROOP, army, 0, 0));
+            for (Troop troop : army.getTroops()) {
+                renderer.packRenderable(troop);
+            }
+            renderer.drawPackedRenderable(army.getTroops().get(0).getPrimitives().get(0).getOpenGLDrawingMethod());
+
+            // Villages rendering
+            renderer.initPacking(army.getVillages().size(), entityFactory.createPlayerControlledEntity(EntityType.VILLAGE, army, 0, 0));
+            for (Village village : army.getVillages()) {
+                renderer.packRenderable(village);
+            }
+            renderer.drawPackedRenderable(army.getVillages().get(0).getPrimitives().get(0).getOpenGLDrawingMethod());
+        }
+
         Entity[][] tileMap = board.getTileMap();
+        System.out.println("tilemap.length : " + tileMap.length + "   board.getNb : " + board.getNbTiles());
+        renderer.initPacking(board.getNbTiles(), entityFactory.createEntity(EntityType.TILE, Color.BLUE, 0, 0));
         for(Entity[] absTile: tileMap){
             for(Entity ordTile : absTile){
                 if(ordTile != null)
-                    renderer.drawDynamicRenderable(ordTile, ordTile.getX(), ordTile.getY());
+                    renderer.packRenderable(ordTile);
             }
         }
-        for(Army army : armies){
-            for(Troop troop : army.getTroops())renderer.drawDynamicRenderable(troop, troop.getX(), troop.getY());
-            for(Village village : army.getVillages())renderer.drawDynamicRenderable(village, village.getX(), village.getY());
-        }
-
+        renderer.drawPackedRenderable(entityFactory.createEntity(EntityType.TILE, Color.BLUE, 0, 0).getPrimitives().get(0).getOpenGLDrawingMethod());
     }
 
     private void loop() {
@@ -186,6 +217,12 @@ public class Game {
         // creates the ContextCapabilities instance and makes the OpenGL
         // bindings available for use.
         GLContext.createFromCurrent();
+
+        int errorCheckValue = GL11.glGetError();
+        if (errorCheckValue != GL11.GL_NO_ERROR) {
+            System.out.println("ERROR - OpenGL setup went wrong:");
+            System.exit(-1);
+        }
 
         renderer = new EntityRenderer();
         board = new Board(WIDTH, HEIGHT);
@@ -201,12 +238,13 @@ public class Game {
         glClearColor(0.5f, 0.0f, 0.0f, 0.0f);
         GL11.glViewport(0, 0, WIDTH, HEIGHT);
 
-        glfwSetWindowSizeCallback(window, windowSizeCallback =  new GLFWWindowSizeCallback() {
+        glfwSetWindowSizeCallback(window, windowSizeCallback = new GLFWWindowSizeCallback() {
             @Override
             public void invoke(long l, int i, int i1) {
                 resize();
             }
         });
+
         final double amountOfTicks = 60.0;
         double ns = 1000000000 / amountOfTicks;
         long currentTime = System.nanoTime();
@@ -215,7 +253,6 @@ public class Game {
         int render = 0;
         double delta = 0;
         long now;
-
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
@@ -226,7 +263,7 @@ public class Game {
             lastTime = now;
 
             if((now - currentTime) > 1000000000) { //1 Second
-                System.out.println("Updates : "+update+"  Render : "+render);
+                glfwSetWindowTitle(window, "Drijkstra : Updates : " + update + "  Render : " + render);
                 update = 0;
                 render = 0;
                 currentTime = System.nanoTime();
@@ -246,16 +283,17 @@ public class Game {
             // Poll for window events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
+            errorCheckValue = GL11.glGetError();
+            if (errorCheckValue != GL11.GL_NO_ERROR) {
+                System.out.println("ERROR - Main Loop:");
+                System.exit(-1);
+            }
         }
         exit_cleanup();
     }
 
     private void exit_cleanup(){
         renderer.destroyOpenGL();
-    }
-
-    public static void main(String[] args) {
-        new Game().run();
     }
 
 }

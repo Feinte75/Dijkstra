@@ -6,8 +6,8 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
 import java.awt.*;
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 
 import static utils.Utils.*;
 
@@ -18,16 +18,16 @@ import static utils.Utils.*;
 public class GridRenderer extends OpenGlRenderer{
 
     private float[] vertices;
-    private byte[] indices;
+    private int[] indices;
     private FloatBuffer verticesBuffer;
     private FloatBuffer colorsBuffer;
-    private ByteBuffer indicesBuffer;
+    private IntBuffer indicesBuffer;
 
-    public GridRenderer(float[] vertices, byte[] indices) {
+    public GridRenderer(float[] vertices, int[] indices) {
         this.vertices = vertices;
         this.indices = indices;
         verticesBuffer = getFloatBufFromArr(vertices);
-        indicesBuffer = getByteBufFromArr(indices);
+        indicesBuffer = getIntBufFromArr(indices);
         colorsBuffer = colorToFloatBuffer(Color.BLACK);
         setupShaders();
         setupVao();
@@ -35,7 +35,7 @@ public class GridRenderer extends OpenGlRenderer{
 
     public void updateBuffers(){
         verticesBuffer = getFloatBufFromArr(vertices);
-        indicesBuffer = getByteBufFromArr(indices);
+        indicesBuffer = getIntBufFromArr(indices);
         GL30.glBindVertexArray(vaoId);
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
         GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_STATIC_DRAW);
@@ -83,7 +83,6 @@ public class GridRenderer extends OpenGlRenderer{
 
     @Override
     protected void setupShaders() {
-        int errorCheckValue = GL11.glGetError();
 
         // Load the vertex shader
         vsId = this.loadShader("vertex.glsl", GL20.GL_VERTEX_SHADER);
@@ -105,7 +104,7 @@ public class GridRenderer extends OpenGlRenderer{
 
         ortho_matrix_location = GL20.glGetUniformLocation(pId, "inOrthoMatrix");
 
-        errorCheckValue = GL11.glGetError();
+        int errorCheckValue = GL11.glGetError();
         if (errorCheckValue != GL11.GL_NO_ERROR) {
             System.out.println("ERROR - Could not create the shaders:");
             System.exit(-1);
@@ -146,7 +145,7 @@ public class GridRenderer extends OpenGlRenderer{
         GL30.glDeleteVertexArrays(vaoId);
     }
 
-    public void updateVerticesIndices(float[] vertices, byte[] indices){
+    public void updateVerticesIndices(float[] vertices, int[] indices) {
         this.vertices = vertices;
         this.indices = indices;
 
@@ -158,10 +157,10 @@ public class GridRenderer extends OpenGlRenderer{
         GL30.glBindVertexArray(vaoId);
         GL20.glEnableVertexAttribArray(0);
         GL20.glEnableVertexAttribArray(1);
-        GL20.glUniformMatrix4(ortho_matrix_location, true, orthoBuffer);
+        GL20.glUniformMatrix4fv(ortho_matrix_location, true, orthoBuffer);
 
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId);
-        GL11.glDrawElements(GL11.GL_LINES, indices.length, GL11.GL_UNSIGNED_BYTE, 0);
+        GL11.glDrawElements(GL11.GL_LINES, indices.length, GL11.GL_UNSIGNED_INT, 0);
 
         // Put everything back to default (deselect)
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);

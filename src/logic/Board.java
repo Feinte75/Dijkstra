@@ -1,12 +1,13 @@
 package logic;
 
 import entities.Entity;
+import entities.EntityFactory;
+import entities.EntityType;
 import entities.Tile;
 import graphic.opengl.Grid;
 import graphic.opengl.Primitive;
 import graphic.opengl.Square;
 import graphic.opengl.renderer.GridRenderer;
-import graphic.opengl.renderer.PrimitiveRenderer;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -20,20 +21,21 @@ import java.util.Arrays;
  */
 public class Board {
 
+    private static int span = 24;
     private Grid grid;
     private GridRenderer gridRenderer;
-    private PrimitiveRenderer primitiveRenderer;
-    private static int span = 24;
     private Entity[][] tileMap;
+    private int nbTiles = 0;
     private int width, height;
+    private EntityFactory factory;
 
     public Board(int width, int height){
         this.width = width;
         this.height = height;
         grid = new Grid(width, height, span);
         gridRenderer = new GridRenderer(grid.getEntityVertices(0,0), grid.getIndices());
-        primitiveRenderer = new PrimitiveRenderer();
         tileMap = new Tile[width/span][height/span];
+        factory = EntityFactory.getEntityFactory();
     }
 
     public void drawGrid(){
@@ -43,18 +45,20 @@ public class Board {
     public void redrawGrid(int width, int height){
         this.width = width;
         this.height = height;
+
         grid.generateGrid(width, height, span);
         gridRenderer.updateVerticesIndices(grid.getEntityVertices(0, 0), grid.getIndices());
         gridRenderer.updateBuffers();
+
         Entity[][] temp = new Tile[width/span][height/span];
         for(int i = 0; i < tileMap.length && i < temp.length; i++){
 
             temp[i] = Arrays.copyOf(tileMap[i], height/span);
-            /*for(int j = 0; j < tileMap[0].length; j++) {
-                temp[i][j] = tileMap[i][j];
-            }*/
         }
         tileMap = temp;
+        /*ArrayList<Primitive> primitives = new ArrayList<Primitive>(1);
+        primitives.add(new Square((float) span/2));
+        factory.updateTemplate(EntityType.TILE, primitives);*/
     }
 
     public void addSquare(int xPos, int yPos, Color color){
@@ -78,7 +82,8 @@ public class Board {
         }
     }
 
-    public void addTile(Entity tile){
+    public void addTile(Color color, float xCoor, float yCoor) {
+        Entity tile = factory.createEntity(EntityType.TILE, color, xCoor, yCoor);
 
         int xPos = (int)tile.getX();
         int yPos = (int)tile.getY();
@@ -98,6 +103,7 @@ public class Board {
             tile.setX(xPos);
             tile.setY(yPos);
             tileMap[x][y] = tile;
+            nbTiles++;
         }
     }
 
@@ -125,6 +131,7 @@ public class Board {
         else yPos+=halfSpan;
 
         tileMap[xPos/span][yPos/span] = null;
+        nbTiles--;
     }
 
     public void resize(int width, int height){
@@ -132,9 +139,12 @@ public class Board {
         this.height = height;
         redrawGrid(width, height);
     }
+
     public Entity[][] getTileMap(){
         return tileMap;
     }
 
-
+    public int getNbTiles() {
+        return nbTiles;
+    }
 }

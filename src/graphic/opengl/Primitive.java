@@ -16,10 +16,13 @@ public abstract class Primitive {
         return adaptedVertices;
     }*/
     protected float[] vertices;
-    protected byte[] indices;
+    protected int[] indices;
 
     public abstract int getOpenGLDrawingMethod();
     public abstract float[] getEntityVertices(float x, float y);
-    public abstract byte[] getIndices();
+
+    public abstract int getNbVertices();
+
+    public abstract int[] getIndices();
 
 }

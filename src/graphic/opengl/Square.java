@@ -1,6 +1,5 @@
 package graphic.opengl;
 
-import graphic.opengl.Primitive;
 import org.lwjgl.opengl.GL11;
 
 /**
@@ -11,7 +10,7 @@ public class Square extends Primitive {
 
     public final static int OPENGLDRAWINGMETHOD = GL11.GL_TRIANGLES;
 
-    private final byte[] indices = {
+    private final int[] indices = {
             // Left bottom triangle
             0, 1, 2,
             // Right top triangle
@@ -44,7 +43,12 @@ public class Square extends Primitive {
     }
 
     @Override
-    public byte[] getIndices() {
+    public int getNbVertices() {
+        return 4;
+    }
+
+    @Override
+    public int[] getIndices() {
         return indices;
     }
 }

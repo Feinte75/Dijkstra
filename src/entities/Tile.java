@@ -11,15 +11,11 @@ import java.util.ArrayList;
  */
 public class Tile extends Entity{
 
-    public Tile(Color color, float x, float y, ArrayList<Primitive> primitives) {
-        super(color, primitives);
-        this.x = x;
-        this.y = y;
-        //initPrimitives(primitives);
+    public Tile() {
+
     }
 
-    @Override
-    public void initPrimitives(ArrayList<Primitive> primitives) {
-
+    public Tile(Color color, float x, float y, ArrayList<Primitive> primitives) {
+        super(x, y, color, primitives);
     }
 }

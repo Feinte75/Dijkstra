@@ -10,7 +10,7 @@ public class Triangle extends Primitive {
 
     private final static int OPENGLDRAWINGMETHOD = GL11.GL_TRIANGLES;
 
-    private final byte[] indices = {
+    private final int[] indices = {
             // Left bottom triangle
             0, 1, 2
     };
@@ -40,7 +40,12 @@ public class Triangle extends Primitive {
     }
 
     @Override
-    public byte[] getIndices() {
+    public int getNbVertices() {
+        return 3;
+    }
+
+    @Override
+    public int[] getIndices() {
         return indices;
     }
 }

@@ -1,11 +1,7 @@
 package logic.commands;
 
 import entities.Entity;
-import entities.Tile;
-import graphic.opengl.Primitive;
 import logic.Board;
-
-import java.util.ArrayList;
 
 /**
  * Created by feinte on 04/06/2015.
@@ -23,7 +19,7 @@ public class AddTileCommand extends MouseCommand {
 
     @Override
     public void execute() {
-        board.addTile(new Tile(entity.getColor(), xPos, yPos, (ArrayList<Primitive>)entity.getPrimitives().clone()));
+        board.addTile(entity.getColor(), xPos, yPos);
     }
 
     @Override

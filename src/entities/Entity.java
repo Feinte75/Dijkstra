@@ -2,6 +2,7 @@ package entities;
 
 import graphic.opengl.Primitive;
 import graphic.opengl.renderer.Renderable;
+import utils.Utils;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -16,21 +17,42 @@ public abstract class Entity implements Renderable {
     protected float x = 0;
     protected float y = 0;
     protected Color color;
+    protected float[] colorArray;
 
-    public Entity(Color color, ArrayList<Primitive> primitives){
-        this.color = color;
-        this.primitives = primitives;
+    public Entity() {
+
     }
 
-    public float[] getColorVector(){
-        return color.getColorComponents(null);
+    public Entity(float x, float y, Color color, ArrayList<Primitive> primitives) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.primitives = primitives;
+        colorArray = Utils.getColorArrayFromColor(color, getNbVertices());
+    }
+
+    public float[] getColorArray() {
+        return colorArray;
+    }
+
+    @Override
+    public int getNbVertices() {
+        return primitives.get(0).getNbVertices();
+    }
+
+    @Override
+    public float[] getVertices() {
+        return primitives.get(0).getEntityVertices(x, y);
+    }
+
+    @Override
+    public int[] getIndices() {
+        return primitives.get(0).getIndices();
     }
 
     public Color getColor(){
         return color;
     }
-
-    public abstract void initPrimitives(ArrayList<Primitive> primitives);
 
     public float getX() {
         return x;

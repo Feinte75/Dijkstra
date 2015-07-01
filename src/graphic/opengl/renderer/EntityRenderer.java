@@ -2,13 +2,15 @@ package graphic.opengl.renderer;
 
 import entities.Entity;
 import graphic.opengl.Primitive;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
+import java.util.Arrays;
 
 import static utils.Utils.*;
 
@@ -18,17 +20,17 @@ import static utils.Utils.*;
  */
 public class EntityRenderer extends OpenGlRenderer {
 
+    int indicesLength;
+    int verticesArrayLength;
+    int indicesArrayLength;
+    int colorArrayLength;
     private FloatBuffer verticesBuffer;
     private FloatBuffer colorsBuffer;
-    private ByteBuffer indicesBuffer;
+    private IntBuffer indicesBuffer;
+    private int offset = 0;
 
-    /**
-     * BE CAREFUL Hard coded Limits which could cause problems later
-     */
+
     public EntityRenderer(){
-        verticesBuffer = getFloatBufFromArr(new float[25]);
-        colorsBuffer = getFloatBufFromArr(new float[4]);
-        indicesBuffer = getByteBufFromArr(new byte[10]);
         setupShaders();
         setupVao();
     }
@@ -47,16 +49,15 @@ public class EntityRenderer extends OpenGlRenderer {
         // A VBO is a collection of Vectors which in this case resemble the location of each vertex.
         vboId = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
-        GL20.glVertexAttribPointer(0, 4, GL11.GL_FLOAT, false, 0, 0);
-
+        GL20.glVertexAttribPointer(0, 4, GL11.GL_FLOAT, false, 0, 0); // Position
         // Deselect (bind to 0) the VBO
-        //GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 
         vbocId = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbocId);
-        GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 0, 0);
+        GL20.glVertexAttribPointer(1, 4, GL11.GL_FLOAT, false, 0, 0); // Color
         // Deselect (bind to 0) the VBO
-        //GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 
         // Deselect (bind to 0) the VAO
         GL30.glBindVertexArray(0);
@@ -64,7 +65,7 @@ public class EntityRenderer extends OpenGlRenderer {
         vboiId = GL15.glGenBuffers();
         GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId);
         // Deselect (bind to 0) the VBO
-        //GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
     }
 
     @Override
@@ -134,6 +135,115 @@ public class EntityRenderer extends OpenGlRenderer {
 
     }
 
+    public void initPacking(int nbUnits, Renderable renderableTemplate) {
+        int errorCheckValue;
+
+        this.verticesArrayLength = renderableTemplate.getPrimitives().get(0).getEntityVertices(0, 0).length;
+        this.indicesArrayLength = renderableTemplate.getPrimitives().get(0).getIndices().length;
+        this.colorArrayLength = renderableTemplate.getColorArray().length;
+
+        verticesBuffer = BufferUtils.createFloatBuffer(nbUnits * verticesArrayLength);
+        indicesBuffer = BufferUtils.createIntBuffer(nbUnits * indicesArrayLength);
+        colorsBuffer = BufferUtils.createFloatBuffer(nbUnits * colorArrayLength);
+        indicesLength = nbUnits * indicesArrayLength;
+
+        offset = 0;
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_DYNAMIC_DRAW);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbocId);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, colorsBuffer, GL15.GL_DYNAMIC_DRAW);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId);
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_DYNAMIC_DRAW);
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+        System.out.println("Init Packing, verticesArrayLength : " + verticesArrayLength + "  indicesArrayLength : " + indicesArrayLength + "  colorArrayLength : " + colorArrayLength + "   Nb units : " + nbUnits);
+
+        errorCheckValue = GL11.glGetError();
+        if (errorCheckValue != GL11.GL_NO_ERROR) {
+            System.out.println("ERROR - Could not init packing:");
+            System.out.println("Error number : " + errorCheckValue);
+            System.exit(-1);
+        }
+    }
+
+    public void packRenderable(Renderable renderable) {
+
+        int[] tempIndices = renderable.getIndices().clone();
+        for (int i = 0; i < tempIndices.length; i++) {
+            tempIndices[i] += (offset * renderable.getNbVertices());
+        }
+
+        System.out.println("Adding vertices : " + Arrays.toString(renderable.getVertices()) +
+                "    indices : " + Arrays.toString(tempIndices) +
+                "    color : " + Arrays.toString(renderable.getColorArray()) +
+                "    at offset : " + offset);
+
+        verticesBuffer.put(renderable.getVertices());
+        indicesBuffer.put(tempIndices);
+        colorsBuffer.put(renderable.getColorArray());
+
+        verticesBuffer.flip();
+        indicesBuffer.flip();
+        colorsBuffer.flip();
+
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
+        GL15.glBufferSubData(GL15.GL_ARRAY_BUFFER, offset * verticesArrayLength * 4, verticesBuffer);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbocId);
+        GL15.glBufferSubData(GL15.GL_ARRAY_BUFFER, offset * colorArrayLength * 4, colorsBuffer);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId);
+        System.out.println("Allocated : " + indicesLength + " indices  " +
+                "   for  " + indicesLength * 4 + "  bytes  " +
+                "Buffering : " + indicesBuffer.remaining() + " indices" +
+                "    at offset : " + offset * indicesArrayLength * 4);
+        GL15.glBufferSubData(GL15.GL_ELEMENT_ARRAY_BUFFER, offset * indicesArrayLength * 4, indicesBuffer);
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+
+        offset++;
+
+        int errorCheckValue = GL11.glGetError();
+        if (errorCheckValue != GL11.GL_NO_ERROR) {
+            System.out.println("ERROR - Could not pack renderable");
+            System.out.println("Error number : " + errorCheckValue);
+            System.exit(-1);
+        }
+    }
+
+    public void drawPackedRenderable(int openGLDrawingMethod) {
+        GL20.glUseProgram(pId);
+        // Bind to the VAO that has all the information about the quad vertices
+        GL30.glBindVertexArray(vaoId);
+        GL20.glEnableVertexAttribArray(0);
+        GL20.glEnableVertexAttribArray(1);
+
+        GL20.glUniformMatrix4fv(ortho_matrix_location, true, orthoBuffer);
+
+        System.out.println("Drawing with " + openGLDrawingMethod + "  NbIndices  " + indicesLength);
+
+        System.out.println("Offset : " + offset);
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId);
+        GL11.glDrawElements(openGLDrawingMethod, indicesLength, GL11.GL_UNSIGNED_INT, 0);
+
+        // Put everything back to default (deselect)
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+        GL20.glDisableVertexAttribArray(0);
+        GL20.glDisableVertexAttribArray(1);
+        GL30.glBindVertexArray(0);
+        GL20.glUseProgram(0);
+
+        int errorCheckValue = GL11.glGetError();
+        if (errorCheckValue != GL11.GL_NO_ERROR) {
+            System.out.println("ERROR - Could not draw packed renderable");
+            System.exit(-1);
+        }
+    }
+
     public void drawDynamicRenderable(Entity entity, float xPos, float yPos){
 
         GL20.glUseProgram(pId);
@@ -142,34 +252,34 @@ public class EntityRenderer extends OpenGlRenderer {
         GL20.glEnableVertexAttribArray(0);
         GL20.glEnableVertexAttribArray(1);
 
-        GL20.glUniformMatrix4(ortho_matrix_location, true, orthoBuffer);
+        GL20.glUniformMatrix4fv(ortho_matrix_location, true, orthoBuffer);
 
         for(Primitive primitive : entity.getPrimitives())
         {
-            float vertices[] = primitive.getEntityVertices(entity.getX(), entity.getY());
-            byte indices[] = primitive.getIndices();
-            float colors[] = entity.getColorVector();
+            float[] vertices = primitive.getEntityVertices(entity.getX(), entity.getY());
+            int[] indices = primitive.getIndices();
+            float[] colors = entity.getColorArray();
 
-            // Sending data to OpenGL requires the usage of (flipped) byte buffers
+            // Sending data to OpenGL requires the usage of (flipped) buffers
             updateFloatBuffer(verticesBuffer, vertices);
             updateFloatBuffer(colorsBuffer, colors);
-            updateByteBuffer(indicesBuffer, indices);
+            updateIntBuffer(indicesBuffer, indices);
 
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, verticesBuffer, GL15.GL_DYNAMIC_DRAW);
             // Put the VBO in the attributes list at index 0
-            //GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 
             GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbocId);
             GL15.glBufferData(GL15.GL_ARRAY_BUFFER, colorsBuffer, GL15.GL_DYNAMIC_DRAW);
-            //GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+            GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
 
             // Draw the vertices
             // Bind to the index VBO that has all the information about the order of the vertices
             GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId);
             GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL15.GL_DYNAMIC_DRAW);
 
-            GL11.glDrawElements(primitive.getOpenGLDrawingMethod(), indices.length, GL11.GL_UNSIGNED_BYTE, 0 );
+            GL11.glDrawElements(primitive.getOpenGLDrawingMethod(), indices.length, GL11.GL_UNSIGNED_INT, 0);
         }
 
         // Put everything back to default (deselect)

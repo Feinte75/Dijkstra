@@ -55,11 +55,11 @@ public class Grid extends Primitive {
             indice += 8;
         }
 
-        indices = new byte[vertices.length / 4];
+        indices = new int[vertices.length / 4];
 
         for(int i = 0; i < indices.length; i++)
         {
-            indices[i] = (byte)i;
+            indices[i] = i;
         }
         System.out.println("Number of lines : " + size / 8 + " number of indices : " + indices[2] + "  size of array : " + vertices.length);
 
@@ -76,7 +76,12 @@ public class Grid extends Primitive {
     }
 
     @Override
-    public byte[] getIndices() {
+    public int getNbVertices() {
+        return 0;
+    }
+
+    @Override
+    public int[] getIndices() {
         return indices;
     }
 }

@@ -10,7 +10,7 @@ public class Line extends Primitive {
 
     private final static int OPENGLDRAWINGMETHOD = GL11.GL_LINES;
 
-    private final byte[] indices = {
+    private final int[] indices = {
         0, 1
     };
 
@@ -32,7 +32,12 @@ public class Line extends Primitive {
     }
 
     @Override
-    public byte[] getIndices() {
+    public int getNbVertices() {
+        return 0;
+    }
+
+    @Override
+    public int[] getIndices() {
         return indices;
     }
 }
