@@ -155,6 +155,7 @@ public class InputHandler {
 
     /**
      * Get the Command corresponding to the code associated to the player
+     *
      * @param player Player to recover the command from
      * @param glCode Input code (Key or Mouse)
      * @return The appropriate command mapped to the input code

@@ -172,6 +172,7 @@ public class EntityRenderer extends OpenGlRenderer {
 
     /**
      * Add the renderable data to buffers
+     *
      * @param renderable Renderable to pack into buffers
      */
     public void packRenderable(Renderable renderable) {

@@ -64,6 +64,7 @@ public class Board {
 
     /**
      * Add a new tile to the grid
+     *
      * @param color Color of the new tile
      * @param xCoor X position
      * @param yCoor Y position
@@ -73,9 +74,9 @@ public class Board {
 
         int xPos = (int)tile.getX();
         int yPos = (int)tile.getY();
-        if(xPos > width || xPos < 0 || yPos > height || yPos < 0)return;
+        int halfSpan = span / 2;
+        if (xPos >= width - halfSpan || xPos <= 0 || yPos >= height - halfSpan || yPos <= 0) return;
         int x, y;
-        int halfSpan = span/2;
         if(xPos%span>=halfSpan)xPos-=halfSpan;
         else xPos+=halfSpan;
         if(yPos%span>=halfSpan)yPos-=halfSpan;
