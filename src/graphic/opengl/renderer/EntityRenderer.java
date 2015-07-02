@@ -10,6 +10,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import static utils.Utils.getFloatBufFromArr;
+import static utils.Utils.getIntBufFromArr;
 
 /**
  * Created by feinte on 31/05/2015.
@@ -238,6 +239,51 @@ public class EntityRenderer extends OpenGlRenderer {
         int errorCheckValue = GL11.glGetError();
         if (errorCheckValue != GL11.GL_NO_ERROR) {
             System.out.println("ERROR - Could not draw packed renderable");
+            System.exit(-1);
+        }
+    }
+
+    /**
+     * Draw a single renderable
+     *
+     * @param renderable Renderable to draw
+     */
+    public void drawSingleRenderable(Renderable renderable) {
+        GL20.glUseProgram(pId);
+        // Bind to the VAO that has all the information about the quad vertices
+        GL30.glBindVertexArray(vaoId);
+        GL20.glEnableVertexAttribArray(0);
+        GL20.glEnableVertexAttribArray(1);
+
+        GL20.glUniformMatrix4fv(ortho_matrix_location, true, orthoBuffer);
+
+        IntBuffer singleIndicesBuffer = getIntBufFromArr(renderable.getIndices());
+        FloatBuffer singleVerticesBuffer = getFloatBufFromArr(renderable.getVertices());
+        FloatBuffer singleColorBuffer = getFloatBufFromArr(renderable.getColorArray());
+
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vboId);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, singleVerticesBuffer, GL15.GL_DYNAMIC_DRAW);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, vbocId);
+        GL15.glBufferData(GL15.GL_ARRAY_BUFFER, singleColorBuffer, GL15.GL_DYNAMIC_DRAW);
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, 0);
+
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, vboiId);
+        GL15.glBufferData(GL15.GL_ELEMENT_ARRAY_BUFFER, singleIndicesBuffer, GL15.GL_DYNAMIC_DRAW);
+        GL11.glDrawElements(renderable.getPrimitives().get(0).getOpenGLDrawingMethod(), renderable.getIndices().length, GL11.GL_UNSIGNED_INT, 0);
+
+        // Put everything back to default (deselect)
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, 0);
+        GL20.glDisableVertexAttribArray(0);
+        GL20.glDisableVertexAttribArray(1);
+        GL30.glBindVertexArray(0);
+        GL20.glUseProgram(0);
+
+        int errorCheckValue = GL11.glGetError();
+        if (errorCheckValue != GL11.GL_NO_ERROR) {
+            System.out.println("ERROR - Could not draw single renderable");
+            System.out.println("Error number : " + errorCheckValue);
             System.exit(-1);
         }
     }

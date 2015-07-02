@@ -9,4 +9,5 @@ public class EntityType {
     public static final int TILE = 0;
     public static final int TROOP = 1;
     public static final int VILLAGE = 2;
+    public static final int HERO = 3;
 }

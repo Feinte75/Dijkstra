@@ -19,10 +19,6 @@ public abstract class Entity implements Renderable {
     protected Color color;
     protected float[] colorArray;
 
-    public Entity() {
-
-    }
-
     public Entity(float x, float y, Color color, ArrayList<Primitive> primitives) {
         this.x = x;
         this.y = y;
@@ -68,6 +64,16 @@ public abstract class Entity implements Renderable {
 
     public void setY(float y) {
         this.y = y;
+    }
+
+    public void setPosition(float x, float y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public void deltaPosition(float dx, float dy) {
+        x += dx;
+        y += dy;
     }
 
     public ArrayList<Primitive> getPrimitives() {

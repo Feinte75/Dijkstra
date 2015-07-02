@@ -13,6 +13,7 @@ public class Village extends PlayerControlledEntity {
 
     private int tick;
     private int troopSpawned = 0;
+
     public Village(Army army, float x, float y, ArrayList<Primitive> primitives){
         super(x, y, army, primitives);
     }
@@ -26,14 +27,5 @@ public class Village extends PlayerControlledEntity {
             }
             tick = 0;
         }
-    }
-
-    public Army getArmy() {
-        return army;
-    }
-
-
-    public void setArmy(Army army) {
-        this.army = army;
     }
 }

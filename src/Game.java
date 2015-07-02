@@ -86,8 +86,8 @@ public class Game {
         armies.add(new Army(Color.GREEN));
         armies.get(1).buildVillage(505, 305);
 
-        armies.get(0).spawnTroop(200, 200);
-        armies.get(1).spawnTroop(1, 1);
+        player.chooseArmy(armies.getFirst());
+        player.chooseHero(null);
     }
 
     void setupOpenGl(){
@@ -187,20 +187,29 @@ public class Game {
 
         for (Army army : armies) {
 
-            renderer.initPacking(army.getTroops().size(), entityFactory.createPlayerControlledEntity(EntityType.TROOP, army, 0, 0));
-            for (Troop troop : army.getTroops()) {
-                renderer.packRenderable(troop);
+            // Troops rendering
+            if (army.getTroops().size() != 0) {
+                renderer.initPacking(army.getTroops().size(), entityFactory.createPlayerControlledEntity(EntityType.TROOP, army, 0, 0));
+                for (Troop troop : army.getTroops()) {
+                    renderer.packRenderable(troop);
+                }
+                renderer.drawPackedRenderable(army.getTroops().get(0).getPrimitives().get(0).getOpenGLDrawingMethod());
             }
-            renderer.drawPackedRenderable(army.getTroops().get(0).getPrimitives().get(0).getOpenGLDrawingMethod());
+
 
             // Villages rendering
-            renderer.initPacking(army.getVillages().size(), entityFactory.createPlayerControlledEntity(EntityType.VILLAGE, army, 0, 0));
-            for (Village village : army.getVillages()) {
-                renderer.packRenderable(village);
+            if (army.getTroops().size() != 0) {
+                renderer.initPacking(army.getVillages().size(), entityFactory.createPlayerControlledEntity(EntityType.VILLAGE, army, 0, 0));
+                for (Village village : army.getVillages()) {
+                    renderer.packRenderable(village);
+                }
+                renderer.drawPackedRenderable(army.getVillages().get(0).getPrimitives().get(0).getOpenGLDrawingMethod());
             }
-            renderer.drawPackedRenderable(army.getVillages().get(0).getPrimitives().get(0).getOpenGLDrawingMethod());
         }
 
+        renderer.drawSingleRenderable(player.getHero());
+
+        // Tiles rendering
         Entity[][] tileMap = board.getTileMap();
         System.out.println("tilemap.length : " + tileMap.length + "   board.getNb : " + board.getNbTiles());
         renderer.initPacking(board.getNbTiles(), entityFactory.createEntity(EntityType.TILE, Color.BLUE, 0, 0));
@@ -271,8 +280,9 @@ public class Game {
                 render = 0;
                 currentTime = System.nanoTime();
             }
-            inputHandler.handlePlayerInput(player);
+
             if(delta >= 1) {
+                inputHandler.handlePlayerInput(player);
                 update();
                 update++;
                 delta--;

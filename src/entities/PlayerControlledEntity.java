@@ -13,10 +13,6 @@ public abstract class PlayerControlledEntity extends Entity {
 
     protected Army army;
 
-    public PlayerControlledEntity() {
-
-    }
-
     public PlayerControlledEntity(float x, float y, Army army, ArrayList<Primitive> primitives) {
         super(x, y, army.getColor(), primitives);
         this.army = army;

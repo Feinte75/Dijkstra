@@ -1,7 +1,6 @@
 package entities;
 
 import graphic.opengl.Primitive;
-import graphic.opengl.Square;
 import logic.Army;
 
 import java.awt.*;
@@ -18,15 +17,10 @@ public class EntityFactory {
 
     private static EntityFactory entityFactory;
     private Map<Integer, ArrayList<Primitive>> entityTemplates;
-    private int templateIndex = -1;
+    private int templateIndex = 10; // Reserved types before 10
 
     private EntityFactory() {
         entityTemplates = new HashMap<Integer, ArrayList<Primitive>>(3);
-
-        ArrayList<Primitive> primitives = new ArrayList<Primitive>(1);
-        primitives.add(new Square(24));
-        entityTemplates.put(EntityType.TILE, primitives);
-
     }
 
     public static EntityFactory getEntityFactory() {
@@ -37,7 +31,8 @@ public class EntityFactory {
     }
 
     public int addTemplate(ArrayList<Primitive> primitives) {
-        templateIndex++;
+
+        while (entityTemplates.get(templateIndex++) != null) ;
         entityTemplates.put(templateIndex, primitives);
         return templateIndex;
     }
@@ -64,6 +59,8 @@ public class EntityFactory {
             return new Troop(army, x, y, (ArrayList<Primitive>) entityTemplates.get(templateID).clone());
         else if (templateID == EntityType.VILLAGE)
             return new Village(army, x, y, (ArrayList<Primitive>) entityTemplates.get(templateID).clone());
+        else if (templateID == EntityType.HERO)
+            return new Hero(army, x, y, (ArrayList<Primitive>) entityTemplates.get(templateID).clone());
         else
             return null;
     }

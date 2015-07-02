@@ -3,7 +3,13 @@ package logic;
 import entities.Entity;
 import entities.EntityFactory;
 import entities.EntityType;
-import logic.commands.*;
+import logic.commands.Command;
+import logic.commands.MouseCommand;
+import logic.commands.PlayerControlledEntityAction;
+import logic.commands.editor.AddTileCommand;
+import logic.commands.editor.RemoveTileCommand;
+import logic.commands.editor.SwitchCommand;
+import logic.commands.game.MovementAction;
 import logic.listeners.CursorListener;
 import org.lwjgl.BufferUtils;
 
@@ -21,16 +27,20 @@ import static org.lwjgl.glfw.GLFW.*;
  */
 public class InputHandler {
 
-    // Need to have 2 arrays because of 2 separate methods to poll
-    private static final int[] keyCodes = {
+    private static final int[] inputCodes = {
+
             GLFW_KEY_SPACE,
-    };
-    private static final int[] mouseCodes = {
+            GLFW_KEY_RIGHT,
+            GLFW_KEY_LEFT,
+            GLFW_KEY_UP,
+            GLFW_KEY_DOWN,
+
             GLFW_MOUSE_BUTTON_1,
             GLFW_MOUSE_BUTTON_2
     };
     private final Board board;
-    private Map<Player, Map<Integer, Command>> playersCommandMaps;
+    private Map<Player, Map<Integer, Command>> playersCommandMap;
+    private Map<Player, Map<Integer, PlayerControlledEntityAction>> playersActionsMap;
     private ArrayList<CursorListener> cursorListeners;
     private long window;
     private int xCursPos, yCursPos;
@@ -45,11 +55,12 @@ public class InputHandler {
         xPosBuffer = BufferUtils.createDoubleBuffer(1);
         yPosBuffer = BufferUtils.createDoubleBuffer(1);
         this.height = height;
-        playersCommandMaps = new HashMap<Player, Map<Integer, Command>>(3);
+        playersCommandMap = new HashMap<Player, Map<Integer, Command>>(3);
+        playersActionsMap = new HashMap<Player, Map<Integer, PlayerControlledEntityAction>>(4);
         cursorListeners = new ArrayList<CursorListener>(2);
         keyStatusMap = new HashMap<Integer, KeyStatus>(5);
-        for(int keyCode : keyCodes){
-            keyStatusMap.put(keyCode, KeyStatus.KEY_RELEASED);
+        for (int inputCode : inputCodes) {
+            keyStatusMap.put(inputCode, KeyStatus.KEY_RELEASED);
         }
         entityFactory = EntityFactory.getEntityFactory();
     }
@@ -57,9 +68,9 @@ public class InputHandler {
     public void loadPlayerCommandMap(Player player){
         // TODO load config from file instead of hard coded
 
-        Entity wallTile = entityFactory.createEntity(EntityType.TILE, Color.CYAN, 0, 0);
         Map<Integer, Command> commandMap = new HashMap<Integer, Command>(3);
-        
+
+        Entity wallTile = entityFactory.createEntity(EntityType.TILE, Color.CYAN, 0, 0);
         MouseCommand addTileCommand = new AddTileCommand(wallTile, board);
         cursorListeners.add(addTileCommand);
         commandMap.put(GLFW_MOUSE_BUTTON_1, addTileCommand);
@@ -72,12 +83,20 @@ public class InputHandler {
         Entity goalTile = entityFactory.createEntity(EntityType.TILE, Color.BLACK, 0, 0);
         addTileCommand = new AddTileCommand(goalTile, board);
         cursorListeners.add(addTileCommand);
-        // Temporary storage of the command untill the Switch command is called
+        // Temporary storage of the command until the Switch command is called
         commandMap.put(GLFW_KEY_0, addTileCommand);
 
-        commandMap.put(GLFW_KEY_SPACE, new SwitchCommand(player, playersCommandMaps, GLFW_KEY_0, GLFW_MOUSE_BUTTON_1));
+        commandMap.put(GLFW_KEY_SPACE, new SwitchCommand(player, playersCommandMap, GLFW_KEY_0, GLFW_MOUSE_BUTTON_1));
 
-        playersCommandMaps.put(player, commandMap);
+        playersCommandMap.put(player, commandMap);
+
+        Map<Integer, PlayerControlledEntityAction> actionMap = new HashMap<Integer, PlayerControlledEntityAction>(3);
+        actionMap.put(GLFW_KEY_RIGHT, new MovementAction(+5, 0));
+        actionMap.put(GLFW_KEY_LEFT, new MovementAction(-5, 0));
+        actionMap.put(GLFW_KEY_UP, new MovementAction(0, +5));
+        actionMap.put(GLFW_KEY_DOWN, new MovementAction(0, -5));
+        playersActionsMap.put(player, actionMap);
+
     }
 
     /**
@@ -100,28 +119,27 @@ public class InputHandler {
      */
     private void updateKeyStatus(){
 
-        for(int keyCode : keyCodes){
+        for (int inputCode : inputCodes) {
 
-            if(glfwGetKey(window, keyCode) == GLFW_PRESS){
-                if(keyStatusMap.get(keyCode) == KeyStatus.KEY_RELEASED)
-                    keyStatusMap.put(keyCode, KeyStatus.KEY_JUST_PRESSED);
+            if ((inputCode <= 7) && (inputCode >= 0)) { //Mouse Input
+
+                if (glfwGetMouseButton(window, inputCode) == GLFW_PRESS) {
+                    if (keyStatusMap.get(inputCode) == KeyStatus.KEY_RELEASED)
+                        keyStatusMap.put(inputCode, KeyStatus.KEY_JUST_PRESSED);
+                    else
+                        keyStatusMap.put(inputCode, KeyStatus.KEY_PRESSED);
+                }
                 else
-                    keyStatusMap.put(keyCode, KeyStatus.KEY_PRESSED);
+                    keyStatusMap.put(inputCode, KeyStatus.KEY_RELEASED);
+            } else { // Keyboard input
+                if (glfwGetKey(window, inputCode) == GLFW_PRESS) {
+                    if (keyStatusMap.get(inputCode) == KeyStatus.KEY_RELEASED)
+                        keyStatusMap.put(inputCode, KeyStatus.KEY_JUST_PRESSED);
+                    else
+                        keyStatusMap.put(inputCode, KeyStatus.KEY_PRESSED);
+                } else
+                    keyStatusMap.put(inputCode, KeyStatus.KEY_RELEASED);
             }
-            else
-                keyStatusMap.put(keyCode, KeyStatus.KEY_RELEASED);
-        }
-
-        for(int mouseCode : mouseCodes){
-
-            if(glfwGetMouseButton(window, mouseCode) == GLFW_PRESS){
-                if(keyStatusMap.get(mouseCode) == KeyStatus.KEY_RELEASED)
-                    keyStatusMap.put(mouseCode, KeyStatus.KEY_JUST_PRESSED);
-                else
-                    keyStatusMap.put(mouseCode, KeyStatus.KEY_PRESSED);
-            }
-            else
-                keyStatusMap.put(mouseCode, KeyStatus.KEY_RELEASED);
         }
     }
 
@@ -137,20 +155,29 @@ public class InputHandler {
         updateKeyStatus();
 
         // TODO find a way to iterate only once over the codes (use combined codes array)
-        for(int keyCode : keyCodes){
+        for (int inputCode : inputCodes) {
             //System.out.println("Keycode : "+keyCode+ " Corresponding state : "+keyStatusMap.get(keyCode)+" keyJustPressed " + getCommand(player, keyCode).isOnlyOnKeyJustPressed());
-            if((keyStatusMap.get(keyCode) == KeyStatus.KEY_JUST_PRESSED) && getCommand(player, keyCode).isOnlyOnKeyJustPressed())
-                getCommand(player, keyCode).execute();
-            else if(((keyStatusMap.get(keyCode) == KeyStatus.KEY_PRESSED) && !getCommand(player, keyCode).isOnlyOnKeyJustPressed()))
-                getCommand(player, keyCode).execute();
+            if (executeCommand(player, inputCode))
+                getCommand(player, inputCode).execute();
+
+            if (executeAction(player, inputCode)) {
+                getAction(player, inputCode).execute(player.getHero());
+                System.out.println("Action !");
+            }
         }
-        for(int mouseCode : mouseCodes){
-            //System.out.println("mouseCode : "+mouseCode+ " Corresponding state : "+keyStatusMap.get(mouseCode)+" keyJustPressed " + getCommand(player, mouseCode).isOnlyOnKeyJustPressed());
-            if((keyStatusMap.get(mouseCode) == KeyStatus.KEY_JUST_PRESSED) && getCommand(player, mouseCode).isOnlyOnKeyJustPressed())
-                getCommand(player, mouseCode).execute();
-            else if(((keyStatusMap.get(mouseCode) == KeyStatus.KEY_PRESSED) && !getCommand(player, mouseCode).isOnlyOnKeyJustPressed()))
-                getCommand(player, mouseCode).execute();
-        }
+    }
+
+    public boolean executeCommand(Player player, int inputCode) {
+        if (keyStatusMap.get(inputCode) == KeyStatus.KEY_RELEASED || getCommand(player, inputCode) == null)
+            return false;
+
+        return !(keyStatusMap.get(inputCode) == KeyStatus.KEY_PRESSED && getCommand(player, inputCode).isOnlyOnKeyJustPressed());
+
+    }
+
+    public boolean executeAction(Player player, int inputCode) {
+        return !(keyStatusMap.get(inputCode) == KeyStatus.KEY_RELEASED || getAction(player, inputCode) == null);
+
     }
 
     /**
@@ -161,7 +188,11 @@ public class InputHandler {
      * @return The appropriate command mapped to the input code
      */
     public Command getCommand(Player player, int glCode){
-        return playersCommandMaps.get(player).get(glCode);
+        return playersCommandMap.get(player).get(glCode);
+    }
+
+    public PlayerControlledEntityAction getAction(Player player, int glCode) {
+        return playersActionsMap.get(player).get(glCode);
     }
 
     public void resize(int width, int height){

@@ -5,9 +5,12 @@ import entities.EntityFactory;
 import entities.EntityType;
 import entities.Tile;
 import graphic.opengl.Grid;
+import graphic.opengl.Primitive;
+import graphic.opengl.Square;
 import graphic.opengl.renderer.GridRenderer;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -32,7 +35,11 @@ public class Board {
         grid = new Grid(width, height, span);
         gridRenderer = new GridRenderer(grid.getEntityVertices(0,0), grid.getIndices());
         tileMap = new Tile[width/span][height/span];
+
         factory = EntityFactory.getEntityFactory();
+        ArrayList<Primitive> primitives = new ArrayList<Primitive>(1);
+        primitives.add(new Square(24));
+        factory.updateTemplate(EntityType.TILE, primitives);
     }
 
     public void drawGrid(){

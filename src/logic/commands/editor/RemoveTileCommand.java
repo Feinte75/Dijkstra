@@ -1,6 +1,7 @@
-package logic.commands;
+package logic.commands.editor;
 
 import logic.Board;
+import logic.commands.MouseCommand;
 
 /**
  * Created by feinte on 05/06/2015.
